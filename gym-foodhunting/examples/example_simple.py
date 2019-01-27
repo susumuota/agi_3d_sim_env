@@ -18,15 +18,15 @@ def getAction():
         return 0
 
 def main():
-    env = gym.make('FoodHuntingGUI-v0')
-    # env = gym.make('FoodHunting-v0')
+    env = gym.make('FoodHuntingDiscreteGUI-v0')
+    # env = gym.make('FoodHuntingDiscrete-v0')
     print(env.observation_space, env.action_space)
     obs = env.reset()
     while True:
         action = getAction()
         # action = env.action_space.sample()
         obs, reward, done, info = env.step(action)
-        print(action, obs, reward, done, info)
+        # print(action, obs, reward, done, info)
         if done:
             obs = env.reset()
     env.close()
