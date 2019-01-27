@@ -26,8 +26,8 @@ class Robot:
     JOINT_TYPE_NAMES = ['JOINT_REVOLUTE', 'JOINT_PRISMATIC', 'JOINT_SPHERICAL', 'JOINT_PLANAR', 'JOINT_FIXED']
 
     # projectionMatrix settings
-    CAMERA_PIXEL_WIDTH = 128
-    CAMERA_PIXEL_HEIGHT = 128
+    CAMERA_PIXEL_WIDTH = 64 # 64 is minimum for stable-baselines
+    CAMERA_PIXEL_HEIGHT = 64 # 64 is minimum for stable-baselines
     CAMERA_FOV = 90.0
     CAMERA_NEAR_PLANE = 0.01
     CAMERA_FAR_PLANE = 100.0
@@ -43,9 +43,9 @@ class Robot:
 
     MAX_VELOCITY = 5.0
 
-    def __init__(self, urdfPath, pos=[0.0, 0.0, 1.0], euler=[0.0, 0.0, 0.0]):
+    def __init__(self, urdfPath, position=[0.0, 0.0, 1.0], orientation=[0.0, 0.0, 0.0, 1.0]):
         self.urdfPath = urdfPath
-        self.robotId = p.loadURDF(urdfPath, basePosition=pos, baseOrientation=p.getQuaternionFromEuler(euler))
+        self.robotId = p.loadURDF(urdfPath, basePosition=position, baseOrientation=orientation)
         self.projectionMatrix = p.computeProjectionMatrixFOV(self.CAMERA_FOV, float(self.CAMERA_PIXEL_WIDTH)/float(self.CAMERA_PIXEL_HEIGHT), self.CAMERA_NEAR_PLANE, self.CAMERA_FAR_PLANE);
 
     def setWheels(self, left, right):
@@ -80,6 +80,9 @@ class Robot:
     def turnRight(self, intensity=1.0):
         self.setWheels(intensity, -intensity)
 
+    def getPositionAndOrientation(self):
+        return p.getBasePositionAndOrientation(self.robotId)
+
     def isContact(self, bodyId):
         cps = p.getContactPoints(self.robotId, bodyId)
         return len(cps) > 0
@@ -98,7 +101,7 @@ class Robot:
         image = p.getCameraImage(self.CAMERA_PIXEL_WIDTH, self.CAMERA_PIXEL_HEIGHT, viewMatrix, self.projectionMatrix, shadow=1, lightDirection=[1, 1, 1], renderer=p.ER_BULLET_HARDWARE_OPENGL)
         return image
 
-    def getObservation(self):
+    def getCameraObservation(self):
         # self.observation_space = gym.spaces.Box(low=0.0, high=1.0, shape=(Robot.CAMERA_PIXEL_HEIGHT, Robot.CAMERA_PIXEL_WIDTH, 4), dtype=np.float32)
         width, height, rgbPixels, depthPixels, segmentationMaskBuffer = self.getCameraImage()
         rgba = np.array(rgbPixels, dtype=np.float32).reshape((height, width, 4))
@@ -141,8 +144,8 @@ class HSR(Robot):
     CAMERA_TARGET_SCALE = 1.0
     CAMERA_UP_SCALE = -1.0
 
-    def __init__(self, urdfPath=HSR_URDF_PATH, pos=[0.0, 0.0, 0.05], euler=[0.0, 0.0, 0.0]):
-        super(HSR, self).__init__(urdfPath, pos, euler)
+    def __init__(self, urdfPath=HSR_URDF_PATH, position=[0.0, 0.0, 0.05], orientation=[0.0, 0.0, 0.0, 1.0]):
+        super(HSR, self).__init__(urdfPath, position, orientation)
 
     # override methods
     def setWheelsVelocity(self, left, right):
@@ -192,8 +195,8 @@ class R2D2(Robot):
     CAMERA_TARGET_SCALE = 1.0
     CAMERA_UP_SCALE = 1.0
 
-    def __init__(self, urdfPath=R2D2_URDF_PATH, pos=[0.0, 0.0, 0.5], euler=[0.0, 0.0,  -0.5*np.pi]):
-        super(R2D2, self).__init__(urdfPath, pos, euler)
+    def __init__(self, urdfPath=R2D2_URDF_PATH, position=[0.0, 0.0, 0.5], orientation=[0.0, 0.0, 0.0, 1.0]):
+        super(R2D2, self).__init__(urdfPath, position, orientation)
 
     # override methods
     def setWheelsVelocity(self, left, right):
@@ -221,7 +224,7 @@ class FoodHuntingEnv(gym.Env):
     MAX_STEPS = 100
     NUM_FOODS = 3
 
-    def __init__(self, render=False, discrete=True):
+    def __init__(self, render=False, discrete=False):
         ### gym variables
         self.observation_space = gym.spaces.Box(low=0.0, high=1.0, shape=(Robot.CAMERA_PIXEL_HEIGHT, Robot.CAMERA_PIXEL_WIDTH, 4), dtype=np.float32)
         # self.observation_space = gym.spaces.Box(low=-1.0, high=255.0, shape=(Robot.CAMERA_PIXEL_HEIGHT, Robot.CAMERA_PIXEL_WIDTH, 6), dtype=np.float32)
@@ -243,7 +246,6 @@ class FoodHuntingEnv(gym.Env):
         self.episode_rewards = 0.0
 
     def close(self):
-        p.resetSimulation()
         p.disconnect(self.physicsClient)
 
     def reset(self):
@@ -261,7 +263,7 @@ class FoodHuntingEnv(gym.Env):
             self.foodIds.append(foodId)
         for i in range(self.BULLET_STEPS_PER_GYM_STEP):
             p.stepSimulation()
-        obs = self.robot.getObservation()
+        obs = self.robot.getCameraObservation()
         return obs
 
     def step(self, action):
@@ -273,11 +275,11 @@ class FoodHuntingEnv(gym.Env):
         for foodId in contactedFoodIds:
             p.removeBody(foodId)
             self.foodIds.remove(foodId)
-        obs = self.robot.getObservation()
+        obs = self.robot.getCameraObservation()
         reward = len(contactedFoodIds) * 1.0
         self.episode_rewards += reward
         done = self.steps >= self.MAX_STEPS or len(self.foodIds) <= 0
-        robotPos, robotOrn = p.getBasePositionAndOrientation(self.robot.robotId)
+        robotPos, robotOrn = self.robot.getPositionAndOrientation()
         info = { 'steps': self.steps, 'pos': robotPos, 'orn': robotOrn }
         if done:
             info['episode'] = { 'r': self.episode_rewards, 'l': self.steps }
