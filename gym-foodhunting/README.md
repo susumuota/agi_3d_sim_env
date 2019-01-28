@@ -1,6 +1,6 @@
 # gym-foodhunting
 
-Gym environments and agents for food hunting in the 3D World.
+Gym environments and agents for food hunting in the 3D world.
 
 
 # Install
@@ -47,6 +47,7 @@ pip uninstall numpy
 # or just remove venv directory.
 ```
 
+
 # Example
 
 ## Simplest Example
@@ -91,22 +92,28 @@ if __name__ == '__main__':
 
 ```
 cd gym-foodhunting
+
 # Run this to enable SubprocVecEnv on Mac OS X.
 # export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 # see https://github.com/rtomayko/shotgun/issues/69#issuecomment-338401331
+
+# See available options.
+python agents/ppo_agent.py --help
+
+# This may take an hour. Discrete action environments is easier than continuous one.
 time python agents/ppo_agent.py --discrete
-# This may take a few minutes.
-time python agents/ppo_agent.py --discrete --play
-# This will open PyBullet debug window
+
+# This will open PyBullet window.
+time python agents/ppo_agent.py --discrete --render --play
 ```
 
 # Available Environments
 
 ```
-FoodHunting-v0
-FoodHuntingGUI-v0
-FoodHuntingDiscrete-v0
-FoodHuntingDiscreteGUI-v0
+FoodHunting-v0             # continuous action, without rendering
+FoodHuntingGUI-v0          # continuous action, with rendering
+FoodHuntingDiscrete-v0     # discrete action, without rendering
+FoodHuntingDiscreteGUI-v0  # discrete action, with rendering
 ```
 
 # Author
