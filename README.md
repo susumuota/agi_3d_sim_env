@@ -7,7 +7,7 @@ A 3D simulation environment for use in human level intelligence (HLAI) and Artif
 
 ## Food Hunting
 
-- https://github.com/susumuota/agi_3d_sim_env/blob/master/gym-foodhunting/README.md
+- https://github.com/susumuota/agi_3d_sim_env/tree/master/gym-foodhunting
 
 
 # Links
