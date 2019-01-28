@@ -3,9 +3,11 @@
 A 3D simulation environment for use in human level intelligence (HLAI) and Artificial General Intelligence (AGI) research.
 
 
-# Install and Uninstall
+# Available Environments
 
-see https://github.com/susumuota/agi_3d_sim_env/blob/master/gym-foodhunting/README.md
+## Food Hunting
+
+- https://github.com/susumuota/agi_3d_sim_env/blob/master/gym-foodhunting/README.md
 
 
 # Links
