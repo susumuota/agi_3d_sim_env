@@ -32,7 +32,7 @@ def learn(filename, total_timesteps, discrete, render, n_cpu, reward_threshold, 
         if mean_step < best_mean_step:
             best_mean_step = mean_step
             print('best_mean_step:', best_mean_step)
-        return mean_reward < reward_threshold and mean_step > step_threshold # False should finish learning
+        return mean_reward < reward_threshold or mean_step > step_threshold # False should finish learning
     env_name = get_env_name(discrete, render)
     policy = CnnPolicy
     print(env_name, policy)
