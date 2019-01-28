@@ -24,6 +24,7 @@ def learn(filename, total_timesteps, discrete, render, n_cpu, reward_threshold, 
         ep_info_buf = _locals['ep_info_buf']
         mean_reward = np.mean([ ep_info['r'] for ep_info in ep_info_buf ])
         mean_step = np.mean([ ep_info['l'] for ep_info in ep_info_buf ])
+        print('mean:', mean_reward, mean_step)
         if mean_reward > best_mean_reward:
             best_mean_reward = mean_reward
             print('best_mean_reward:', best_mean_reward)
@@ -32,6 +33,9 @@ def learn(filename, total_timesteps, discrete, render, n_cpu, reward_threshold, 
         if mean_step < best_mean_step:
             best_mean_step = mean_step
             print('best_mean_step:', best_mean_step)
+            if mean_reward >= reward_threshold:
+                print('saving new best model:', filename)
+                _locals['self'].save(filename)
         return mean_reward < reward_threshold or mean_step > step_threshold # False should finish learning
     env_name = get_env_name(discrete, render)
     policy = CnnPolicy
@@ -41,7 +45,7 @@ def learn(filename, total_timesteps, discrete, render, n_cpu, reward_threshold, 
     # see https://github.com/rtomayko/shotgun/issues/69#issuecomment-338401331
     env = SubprocVecEnv([lambda: gym.make(env_name) for i in range(n_cpu)])
     model = PPO2(policy, env, verbose=1)
-    model.learn(total_timesteps=total_timesteps, log_interval=2, callback=callback)
+    model.learn(total_timesteps=total_timesteps, log_interval=5, callback=callback)
     model.save(filename)
     env.close()
 
@@ -51,11 +55,18 @@ def play(filename, total_timesteps, discrete, render):
     print(env_name, policy)
     env = DummyVecEnv([lambda: gym.make(env_name)])
     model = PPO2.load(filename, env, verbose=1)
-    obs = env.reset()
+    obss = env.reset()
+    rewards_buf = []
+    steps_buf = []
     for i in range(total_timesteps):
-        action, _states = model.predict(obs)
-        obs, rewards, dones, info = env.step(action)
-        env.render()
+        action, _states = model.predict(obss)
+        obss, rewards, dones, infos = env.step(action)
+        env.render() # dummy
+        if dones.all():
+            rewards_buf.append([ info['episode']['r'] for info in infos ])
+            steps_buf.append([ info['episode']['l'] for info in infos ])
+            print('mean:', np.mean(rewards_buf), np.mean(steps_buf))
+            # obss = env.reset() # does not need this line but why?
     env.close()
 
 if __name__ == '__main__':
