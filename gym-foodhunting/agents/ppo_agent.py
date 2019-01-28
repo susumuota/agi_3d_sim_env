@@ -9,14 +9,15 @@ from stable_baselines.common.policies import CnnPolicy, CnnLstmPolicy, CnnLnLstm
 from stable_baselines.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines import PPO2
 
-def get_env_name(discrete, render):
-    name = 'FoodHunting'
+def get_env_name(robot, discrete, render):
+    robot = '' if robot == 'R2D2' else robot
+    name = 'FoodHunting' + robot
     name = name + 'Discrete' if discrete else name
     name = name + 'GUI' if render else name
     name = name + '-v0'
     return name
 
-def learn(filename, total_timesteps, discrete, render, n_cpu, reward_threshold, step_threshold):
+def learn(filename, total_timesteps, robot, discrete, render, n_cpu, reward_threshold, step_threshold):
     best_mean_reward = -np.inf
     best_mean_step = np.inf
     def callback(_locals, _globals):
@@ -24,7 +25,7 @@ def learn(filename, total_timesteps, discrete, render, n_cpu, reward_threshold, 
         ep_info_buf = _locals['ep_info_buf']
         mean_reward = np.mean([ ep_info['r'] for ep_info in ep_info_buf ])
         mean_step = np.mean([ ep_info['l'] for ep_info in ep_info_buf ])
-        print('mean:', mean_reward, mean_step)
+        # print('mean:', mean_reward, mean_step)
         if mean_reward > best_mean_reward:
             best_mean_reward = mean_reward
             print('best_mean_reward:', best_mean_reward)
@@ -37,7 +38,7 @@ def learn(filename, total_timesteps, discrete, render, n_cpu, reward_threshold, 
                 print('saving new best model:', filename)
                 _locals['self'].save(filename)
         return mean_reward < reward_threshold or mean_step > step_threshold # False should finish learning
-    env_name = get_env_name(discrete, render)
+    env_name = get_env_name(robot, discrete, render)
     policy = CnnPolicy
     print(env_name, policy)
     # Run this to enable SubprocVecEnv on Mac OS X.
@@ -49,8 +50,8 @@ def learn(filename, total_timesteps, discrete, render, n_cpu, reward_threshold, 
     model.save(filename)
     env.close()
 
-def play(filename, total_timesteps, discrete, render):
-    env_name = get_env_name(discrete, render)
+def play(filename, total_timesteps, robot, discrete, render):
+    env_name = get_env_name(robot, discrete, render)
     policy = CnnPolicy
     print(env_name, policy)
     env = DummyVecEnv([lambda: gym.make(env_name)])
@@ -71,17 +72,18 @@ def play(filename, total_timesteps, discrete, render):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filename', type=str, default='foodhunting', help='filename.')
+    parser.add_argument('--play', action='store_true', help='play or learn.')
+    parser.add_argument('--filename', type=str, default='foodhunting', help='filename to save/load model.')
     parser.add_argument('--total_timesteps', type=int, default=100000, help='total timesteps.')
+    parser.add_argument('--robot', type=str, default='R2D2', help='robot name. R2D2 or HSR')
+    parser.add_argument('--discrete', action='store_true', help='discrete or continuous action.')
+    parser.add_argument('--render', action='store_true', help='render or not.')
     parser.add_argument('--n_cpu', type=int, default=4, help='number of CPU cores.')
     parser.add_argument('--reward_threshold', type=float, default=3.0, help='reward threshold to finish learning.')
     parser.add_argument('--step_threshold', type=float, default=50.0, help='step threshold to finish learning.')
-    parser.add_argument('--discrete', action='store_true', help='discrete or continuous action.')
-    parser.add_argument('--render', action='store_true', help='render or not.')
-    parser.add_argument('--play', action='store_true', help='play or learn.')
     args = parser.parse_args()
 
     if args.play:
-        play(args.filename, args.total_timesteps, args.discrete, args.render)
+        play(args.filename, args.total_timesteps, args.robot, args.discrete, args.render)
     else:
-        learn(args.filename, args.total_timesteps, args.discrete, args.render, args.n_cpu, args.reward_threshold, args.step_threshold)
+        learn(args.filename, args.total_timesteps, args.robot, args.discrete, args.render, args.n_cpu, args.reward_threshold, args.step_threshold)
