@@ -134,7 +134,7 @@ class Robot:
 
 
 class HSR(Robot):
-    HSR_URDF_PATH = '/Users/ota/Documents/python/bullet/hsr_description/robots/hsrb4s.urdf'
+    HSR_URDF_PATH = '/Users/ota/Documents/python/agi_3d_sim_env/hsr_description/robots/hsrb4s.urdf'
 
     # viewMatrix settings
     CAMERA_JOINT_INDEX = 19
@@ -224,7 +224,7 @@ class FoodHuntingEnv(gym.Env):
     MAX_STEPS = 100
     NUM_FOODS = 3
 
-    def __init__(self, render=False, discrete=False):
+    def __init__(self, render=False, discrete=False, robotModel=R2D2):
         ### gym variables
         self.observation_space = gym.spaces.Box(low=0.0, high=1.0, shape=(Robot.CAMERA_PIXEL_HEIGHT, Robot.CAMERA_PIXEL_WIDTH, 4), dtype=np.float32)
         # self.observation_space = gym.spaces.Box(low=-1.0, high=255.0, shape=(Robot.CAMERA_PIXEL_HEIGHT, Robot.CAMERA_PIXEL_WIDTH, 6), dtype=np.float32)
@@ -238,6 +238,7 @@ class FoodHuntingEnv(gym.Env):
         ### pybullet settings
         self.physicsClient = p.connect(p.GUI if render else p.DIRECT)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
+        self.robotModel = robotModel
         self.planeId = None
         self.robot = None
         self.foodIds = []
@@ -255,8 +256,7 @@ class FoodHuntingEnv(gym.Env):
         # p.setTimeStep(1.0 / 240.0)
         p.setGravity(0, 0, self.GRAVITY)
         self.planeId = p.loadURDF('plane.urdf')
-        #self.robot = R2D2()
-        self.robot = HSR()
+        self.robot = self.robotModel()
         self.foodIds = []
         for foodPos in self._generateFoodPositions(self.NUM_FOODS):
             foodId = p.loadURDF('sphere2red.urdf', foodPos, globalScaling=1.0)
