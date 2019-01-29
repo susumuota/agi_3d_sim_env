@@ -9,6 +9,8 @@ from stable_baselines.common.policies import CnnPolicy, CnnLstmPolicy, CnnLnLstm
 from stable_baselines.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines import PPO2
 
+BEST_SAVE_FILE_SUFFIX = '_best'
+
 def get_env_name(robot, discrete, render):
     robot = '' if robot == 'R2D2' else robot
     name = 'FoodHunting' + robot
@@ -17,26 +19,28 @@ def get_env_name(robot, discrete, render):
     name = name + '-v0'
     return name
 
-def learn(filename, total_timesteps, robot, discrete, render, n_cpu, reward_threshold, step_threshold):
+def learn(load_file, save_file, total_timesteps, robot, discrete, render, n_cpu, reward_threshold, step_threshold):
     best_mean_reward = -np.inf
     best_mean_step = np.inf
+    best_save_file = save_file + BEST_SAVE_FILE_SUFFIX
     def callback(_locals, _globals):
-        nonlocal best_mean_reward, best_mean_step
         ep_info_buf = _locals['ep_info_buf']
+        if len(ep_info_buf) < ep_info_buf.maxlen:
+            return True
         mean_reward = np.mean([ ep_info['r'] for ep_info in ep_info_buf ])
         mean_step = np.mean([ ep_info['l'] for ep_info in ep_info_buf ])
-        # print('mean:', mean_reward, mean_step)
+        nonlocal best_mean_reward, best_mean_step
         if mean_reward > best_mean_reward:
             best_mean_reward = mean_reward
             print('best_mean_reward:', best_mean_reward)
-            print('saving new best model:', filename)
-            _locals['self'].save(filename)
+            print('saving new best model:', best_save_file)
+            _locals['self'].save(best_save_file)
         if mean_step < best_mean_step:
             best_mean_step = mean_step
             print('best_mean_step:', best_mean_step)
             if mean_reward >= reward_threshold:
-                print('saving new best model:', filename)
-                _locals['self'].save(filename)
+                print('saving new best model:', best_save_file)
+                _locals['self'].save(best_save_file)
         return mean_reward < reward_threshold or mean_step > step_threshold # False should finish learning
     env_name = get_env_name(robot, discrete, render)
     policy = CnnPolicy
@@ -45,23 +49,27 @@ def learn(filename, total_timesteps, robot, discrete, render, n_cpu, reward_thre
     # export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
     # see https://github.com/rtomayko/shotgun/issues/69#issuecomment-338401331
     env = SubprocVecEnv([lambda: gym.make(env_name) for i in range(n_cpu)])
-    model = PPO2(policy, env, verbose=1)
+    if load_file is not None:
+        model = PPO2.load(load_file, env, verbose=1)
+    else:
+        model = PPO2(policy, env, verbose=1)
     model.learn(total_timesteps=total_timesteps, log_interval=5, callback=callback)
-    model.save(filename)
+    print('saving model:', save_file)
+    model.save(save_file)
     env.close()
 
-def play(filename, total_timesteps, robot, discrete, render):
+def play(load_file, total_timesteps, robot, discrete, render):
     env_name = get_env_name(robot, discrete, render)
     policy = CnnPolicy
     print(env_name, policy)
     env = DummyVecEnv([lambda: gym.make(env_name)])
-    model = PPO2.load(filename, env, verbose=1)
+    model = PPO2.load(load_file, env, verbose=1)
     obss = env.reset()
     rewards_buf = []
     steps_buf = []
     for i in range(total_timesteps):
-        action, _states = model.predict(obss)
-        obss, rewards, dones, infos = env.step(action)
+        actions, _states = model.predict(obss)
+        obss, rewards, dones, infos = env.step(actions)
         env.render() # dummy
         if dones.all():
             rewards_buf.append([ info['episode']['r'] for info in infos ])
@@ -73,7 +81,8 @@ def play(filename, total_timesteps, robot, discrete, render):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--play', action='store_true', help='play or learn.')
-    parser.add_argument('--filename', type=str, default='foodhunting', help='filename to save/load model.')
+    parser.add_argument('--save_file', type=str, default='foodhunting', help='filename to save model.')
+    parser.add_argument('--load_file', type=str, default=None, help='filename to load model.')
     parser.add_argument('--total_timesteps', type=int, default=100000, help='total timesteps.')
     parser.add_argument('--robot', type=str, default='R2D2', help='robot name. R2D2 or HSR')
     parser.add_argument('--discrete', action='store_true', help='discrete or continuous action.')
@@ -84,6 +93,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.play:
-        play(args.filename, args.total_timesteps, args.robot, args.discrete, args.render)
+        play(args.load_file, args.total_timesteps, args.robot, args.discrete, args.render)
     else:
-        learn(args.filename, args.total_timesteps, args.robot, args.discrete, args.render, args.n_cpu, args.reward_threshold, args.step_threshold)
+        learn(args.load_file, args.save_file, args.total_timesteps, args.robot, args.discrete, args.render, args.n_cpu, args.reward_threshold, args.step_threshold)
