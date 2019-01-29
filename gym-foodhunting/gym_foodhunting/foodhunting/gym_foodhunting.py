@@ -23,7 +23,8 @@ import pybullet_data
 
 
 class Robot:
-    JOINT_TYPE_NAMES = ['JOINT_REVOLUTE', 'JOINT_PRISMATIC', 'JOINT_SPHERICAL', 'JOINT_PLANAR', 'JOINT_FIXED']
+    # default values are for R2D2 model
+    URDF_PATH = 'r2d2.urdf'
 
     # projectionMatrix settings
     CAMERA_PIXEL_WIDTH = 64 # 64 is minimum for stable-baselines
@@ -33,7 +34,6 @@ class Robot:
     CAMERA_FAR_PLANE = 100.0
 
     # viewMatrix settings
-    # default values are for R2D2 model
     CAMERA_JOINT_INDEX = 14
     CAMERA_EYE_INDEX = 1
     CAMERA_UP_INDEX = 2
@@ -41,9 +41,13 @@ class Robot:
     CAMERA_TARGET_SCALE = 1.0
     CAMERA_UP_SCALE = 1.0
 
+    # wheels settings
     MAX_VELOCITY = 5.0
 
-    def __init__(self, urdfPath, position=[0.0, 0.0, 1.0], orientation=[0.0, 0.0, 0.0, 1.0]):
+    # for debug
+    JOINT_TYPE_NAMES = ['JOINT_REVOLUTE', 'JOINT_PRISMATIC', 'JOINT_SPHERICAL', 'JOINT_PLANAR', 'JOINT_FIXED']
+
+    def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 1.0], orientation=[0.0, 0.0, 0.0, 1.0]):
         self.urdfPath = urdfPath
         self.robotId = p.loadURDF(urdfPath, basePosition=position, baseOrientation=orientation)
         self.projectionMatrix = p.computeProjectionMatrixFOV(self.CAMERA_FOV, float(self.CAMERA_PIXEL_WIDTH)/float(self.CAMERA_PIXEL_HEIGHT), self.CAMERA_NEAR_PLANE, self.CAMERA_FAR_PLANE);
@@ -95,8 +99,8 @@ class Robot:
         eyePos = cameraPos + self.CAMERA_EYE_SCALE * cameraMat[self.CAMERA_EYE_INDEX]
         targetPos = cameraPos + self.CAMERA_TARGET_SCALE * cameraMat[self.CAMERA_EYE_INDEX]
         up = self.CAMERA_UP_SCALE * cameraMat[self.CAMERA_UP_INDEX]
-        p.addUserDebugLine(eyePos, targetPos, lineColorRGB=[1, 0, 0], lifeTime=0.1) # red line for camera vector
-        p.addUserDebugLine(eyePos, eyePos + up * 0.5, lineColorRGB=[0, 0, 1], lifeTime=0.1) # blue line for up vector
+        #p.addUserDebugLine(eyePos, targetPos, lineColorRGB=[1, 0, 0], lifeTime=0.1) # red line for camera vector
+        #p.addUserDebugLine(eyePos, eyePos + up * 0.5, lineColorRGB=[0, 0, 1], lifeTime=0.1) # blue line for up vector
         viewMatrix = p.computeViewMatrix(eyePos, targetPos, up)
         image = p.getCameraImage(self.CAMERA_PIXEL_WIDTH, self.CAMERA_PIXEL_HEIGHT, viewMatrix, self.projectionMatrix, shadow=1, lightDirection=[1, 1, 1], renderer=p.ER_BULLET_HARDWARE_OPENGL)
         return image
@@ -107,7 +111,7 @@ class Robot:
         rgba = np.array(rgbPixels, dtype=np.float32).reshape((height, width, 4))
         depth = np.array(depthPixels, dtype=np.float32).reshape((height, width, 1))
         rgb = np.delete(rgba, [3], axis=2) # delete alpha channel
-        rgb01 = np.clip(rgb * 0.00392156862, 0.0, 1.0) # rgb / 255.0
+        rgb01 = np.clip(rgb * 0.00392156862, 0.0, 1.0) # rgb / 255.0, normalize
         obs = np.insert(rgb01, [3], np.clip(depth, 0.0, 1.0), axis=2)
         # self.observation_space = gym.spaces.Box(low=-1.0, high=255.0, shape=(Robot.CAMERA_PIXEL_HEIGHT, Robot.CAMERA_PIXEL_WIDTH, 6), dtype=np.float32)
         # width, height, rgbPixels, depthPixels, segmentationMaskBuffer = self.getCameraImage()
@@ -134,7 +138,7 @@ class Robot:
 
 
 class HSR(Robot):
-    HSR_URDF_PATH = '/Users/ota/Documents/python/agi_3d_sim_env/hsr_description/robots/hsrb4s.urdf'
+    URDF_PATH = 'hsrb4s.urdf'
 
     # viewMatrix settings
     CAMERA_JOINT_INDEX = 19
@@ -144,7 +148,7 @@ class HSR(Robot):
     CAMERA_TARGET_SCALE = 1.0
     CAMERA_UP_SCALE = -1.0
 
-    def __init__(self, urdfPath=HSR_URDF_PATH, position=[0.0, 0.0, 0.05], orientation=[0.0, 0.0, 0.0, 1.0]):
+    def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 0.05], orientation=[0.0, 0.0, 0.0, 1.0]):
         super(HSR, self).__init__(urdfPath, position, orientation)
 
     # override methods
@@ -185,7 +189,7 @@ class HSR(Robot):
                                     targetPositions=[flex, roll])
 
 class R2D2(Robot):
-    R2D2_URDF_PATH = 'r2d2.urdf'
+    URDF_PATH = 'r2d2.urdf'
 
     # viewMatrix settings
     CAMERA_JOINT_INDEX = 14
@@ -195,7 +199,7 @@ class R2D2(Robot):
     CAMERA_TARGET_SCALE = 1.0
     CAMERA_UP_SCALE = 1.0
 
-    def __init__(self, urdfPath=R2D2_URDF_PATH, position=[0.0, 0.0, 0.5], orientation=[0.0, 0.0, 0.0, 1.0]):
+    def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 0.5], orientation=[0.0, 0.0, 0.0, 1.0]):
         super(R2D2, self).__init__(urdfPath, position, orientation)
 
     # override methods
