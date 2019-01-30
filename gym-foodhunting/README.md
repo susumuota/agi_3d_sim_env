@@ -14,7 +14,7 @@ See also these pages for more details of installation.
 - https://github.com/hill-a/stable-baselines#installation
 
 ```
-git clone git@github.com:susumuota/agi_3d_sim_env.git
+git clone https://github.com/susumuota/agi_3d_sim_env.git
 cd agi_3d_sim_env
 
 python3 -m venv venv
@@ -25,8 +25,11 @@ pip install gym
 pip install pybullet
 pip install stable-baselines
 
-git clone git@github.com:ToyotaResearchInstitute/hsr_description.git
-git clone git@github.com:ToyotaResearchInstitute/hsr_meshes.git
+git clone https://github.com/susumuota/hsr_description.git
+git clone https://github.com/ToyotaResearchInstitute/hsr_meshes.git
+
+cp -p hsr_description/robots/hsrb4s.urdf venv/lib/python3.6/site-packages/pybullet_data
+cp -rp hsr_meshes venv/lib/python3.6/site-packages/pybullet_data
 
 cd gym-foodhunting
 pip install -e .
