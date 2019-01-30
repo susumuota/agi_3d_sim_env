@@ -465,9 +465,7 @@ class R2D2(Robot):
     # R2D2 specific methods
     def setHeadPosition(self, pan):
         # 13, head_swivel
-        orgPan = pan
         pan, panMaxVelocity = self.scaleJointPosition(13, pan)
-        pan = orgPan
         p.setJointMotorControl2(bodyIndex=self.robotId,
                                 jointIndex=13,
                                 controlMode=p.POSITION_CONTROL,
