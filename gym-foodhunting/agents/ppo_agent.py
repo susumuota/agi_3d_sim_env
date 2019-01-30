@@ -35,12 +35,11 @@ def learn(load_file, save_file, total_timesteps, robot, discrete, render, n_cpu,
             print('best_mean_reward:', best_mean_reward)
             print('saving new best model:', best_save_file)
             _locals['self'].save(best_save_file)
-        if mean_step < best_mean_step:
+        if mean_reward >= reward_threshold and mean_step < best_mean_step:
             best_mean_step = mean_step
             print('best_mean_step:', best_mean_step)
-            if mean_reward >= reward_threshold:
-                print('saving new best model:', best_save_file)
-                _locals['self'].save(best_save_file)
+            print('saving new best model:', best_save_file)
+            _locals['self'].save(best_save_file)
         return mean_reward < reward_threshold or mean_step > step_threshold # False should finish learning
     env_name = get_env_name(robot, discrete, render)
     policy = CnnPolicy
