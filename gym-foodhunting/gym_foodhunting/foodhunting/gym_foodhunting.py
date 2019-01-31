@@ -44,38 +44,24 @@ class Robot:
     # for debug
     JOINT_TYPE_NAMES = ['JOINT_REVOLUTE', 'JOINT_PRISMATIC', 'JOINT_SPHERICAL', 'JOINT_PLANAR', 'JOINT_FIXED']
 
-    def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 1.0], orientation=[0.0, 0.0, 0.0, 1.0], isDiscreteAction=False):
+    def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 1.0], orientation=[0.0, 0.0, 0.0, 1.0]):
         self.urdfPath = urdfPath
         self.robotId = p.loadURDF(urdfPath, basePosition=position, baseOrientation=orientation)
-        self.isDiscreteAction = isDiscreteAction
         self.projectionMatrix = p.computeProjectionMatrixFOV(self.CAMERA_FOV, float(self.CAMERA_PIXEL_WIDTH)/float(self.CAMERA_PIXEL_HEIGHT), self.CAMERA_NEAR_PLANE, self.CAMERA_FAR_PLANE);
 
     @classmethod
-    def getActionSpace(cls, isDiscreteAction):
-        if isDiscreteAction:
-            return gym.spaces.Discrete(3) # 0, 1, 2
-        else:
-            n = 2
-            low = -1.0 * np.ones(n)
-            high = 1.0 * np.ones(n)
-            return gym.spaces.Box(low=low, high=high, dtype=np.float32)
+    def getActionSpace(cls):
+        n = 2
+        low = -1.0 * np.ones(n)
+        high = 1.0 * np.ones(n)
+        return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
     @classmethod
     def getObservationSpace(cls):
         return gym.spaces.Box(low=0.0, high=1.0, shape=(Robot.CAMERA_PIXEL_HEIGHT, Robot.CAMERA_PIXEL_WIDTH, 4), dtype=np.float32)
 
     def setAction(self, action):
-        if self.isDiscreteAction:
-            if action == 0:
-                self.setWheelVelocity(1.0, 1.0) # forward
-            elif action == 1:
-                self.setWheelVelocity(-1.0, 1.0) # turn left
-            elif action == 2:
-                self.setWheelVelocity(1.0, -1.0) # turn right
-            else:
-                raise ValueError
-        else:
-            self.setWheelVelocity(action[0], action[1])
+        self.setWheelVelocity(action[0], action[1])
 
     def setWheelVelocity(self, left, right):
         # implement this in subclass
@@ -178,39 +164,26 @@ class HSR(Robot):
     CAMERA_TARGET_SCALE = 1.0
     CAMERA_UP_SCALE = -1.0
 
-    def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 0.05], orientation=[0.0, 0.0, 0.0, 1.0], isDiscreteAction=False):
-        super(HSR, self).__init__(urdfPath, position, orientation, isDiscreteAction)
+    def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 0.05], orientation=[0.0, 0.0, 0.0, 1.0]):
+        super(HSR, self).__init__(urdfPath, position, orientation)
         self.robot.setArmPosition(1.0, -1.0, 0.0)
 
     # override methods
     @classmethod
-    def getActionSpace(cls, isDiscreteAction):
-        if isDiscreteAction:
-            return gym.spaces.Discrete(3) # 0, 1, 2
-        else:
-            n = 19
-            low = -1.0 * np.ones(n)
-            high = 1.0 * np.ones(n)
-            return gym.spaces.Box(low=low, high=high, dtype=np.float32)
+    def getActionSpace(cls):
+        n = 19
+        low = -1.0 * np.ones(n)
+        high = 1.0 * np.ones(n)
+        return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
     def setAction(self, action):
-        if self.isDiscreteAction:
-            if action == 0:
-                self.setWheelVelocity(1.0, 1.0) # forward
-            elif action == 1:
-                self.setWheelVelocity(-1.0, 1.0) # turn left
-            elif action == 2:
-                self.setWheelVelocity(1.0, -1.0) # turn right
-            else:
-                raise ValueError
-        else:
-            self.setWheelVelocity(action[0], action[1])
-            self.setBaseRollPosition(action[2])
-            self.setTorsoLiftPosition(action[3])
-            self.setHeadPosition(action[4], action[5])
-            self.setArmPosition(action[6], action[7], action[8])
-            self.setWristPosition(action[9], action[10])
-            self.setHandPosition(action[11], action[12], action[13], action[14], action[15], action[16], action[17], action[18], action[19])
+        self.setWheelVelocity(action[0], action[1])
+        self.setBaseRollPosition(action[2])
+        self.setTorsoLiftPosition(action[3])
+        self.setHeadPosition(action[4], action[5])
+        self.setArmPosition(action[6], action[7], action[8])
+        self.setWristPosition(action[9], action[10])
+        self.setHandPosition(action[11], action[12], action[13], action[14], action[15], action[16], action[17], action[18], action[19])
 
     def setWheelVelocity(self, left, right):
         right = self.scaleJointVelocity(2, right)
@@ -389,6 +362,16 @@ class HSR(Robot):
                                 maxVelocity=rightDistalMaxVelocity,
                                 targetPosition=rightDistal)
 
+class HSRDiscrete(HSR):
+    ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0] ]
+
+    @classmethod
+    def getActionSpace(cls):
+        return gym.spaces.Discrete(3) # 0, 1, 2
+
+    def setAction(self, action):
+        self.setWheelVelocity(*self.ACTIONS[action])
+
 class R2D2(Robot):
     URDF_PATH = 'r2d2.urdf'
 
@@ -400,33 +383,21 @@ class R2D2(Robot):
     CAMERA_TARGET_SCALE = 1.0
     CAMERA_UP_SCALE = 1.0
 
-    def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 0.5], orientation=[0.0, 0.0, 0.0, 1.0], isDiscreteAction=False):
-        super(R2D2, self).__init__(urdfPath, position, orientation, isDiscreteAction)
+    def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 0.5], orientation=[0.0, 0.0, 0.0, 1.0]):
+        super(R2D2, self).__init__(urdfPath, position, orientation)
 
     # override methods
     @classmethod
-    def getActionSpace(cls, isDiscreteAction):
-        if isDiscreteAction:
-            return gym.spaces.Discrete(3) # 0, 1, 2
-        else:
-            n = 3
-            low = -1.0 * np.ones(n)
-            high = 1.0 * np.ones(n)
-            return gym.spaces.Box(low=low, high=high, dtype=np.float32)
+    def getActionSpace(cls):
+        n = 3
+        # n = 2
+        low = -1.0 * np.ones(n)
+        high = 1.0 * np.ones(n)
+        return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
     def setAction(self, action):
-        if self.isDiscreteAction:
-            if action == 0:
-                self.setWheelVelocity(1.0, 1.0)
-            elif action == 1:
-                self.setWheelVelocity(-1.0, 1.0)
-            elif action == 2:
-                self.setWheelVelocity(1.0, -1.0)
-            else:
-                raise ValueError
-        else:
-            self.setWheelVelocity(action[0], action[1])
-            self.setHeadPosition(action[2])
+        self.setWheelVelocity(action[0], action[1])
+        # self.setHeadPosition(action[2])
 
     def setWheelVelocity(self, left, right):
         rf = self.scaleJointVelocity(2, right)
@@ -472,6 +443,16 @@ class R2D2(Robot):
                                 maxVelocity=panMaxVelocity,
                                 targetPosition=pan)
 
+class R2D2Discrete(R2D2):
+    ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0] ]
+
+    @classmethod
+    def getActionSpace(cls):
+        return gym.spaces.Discrete(3) # 0, 1, 2
+
+    def setAction(self, action):
+        self.setWheelVelocity(*self.ACTIONS[action])
+
 class FoodHuntingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
@@ -480,12 +461,11 @@ class FoodHuntingEnv(gym.Env):
     MAX_STEPS = 100
     NUM_FOODS = 3
 
-    def __init__(self, render=False, discrete=False, robotModel=R2D2):
+    def __init__(self, render=False, robotModel=R2D2):
         ### gym variables
-        self.isDiscreteAction = discrete
-        self.observation_space = robotModel.getObservationSpace()
-        self.action_space = robotModel.getActionSpace(self.isDiscreteAction)
-        self.reward_range = (0.0, 1.0)
+        self.observation_space = robotModel.getObservationSpace() # classmethod
+        self.action_space = robotModel.getActionSpace() # classmethod
+        self.reward_range = (-1.0, 1.0)
         # self.seed()
         ### pybullet settings
         self.physicsClient = p.connect(p.GUI if render else p.DIRECT)
@@ -508,7 +488,7 @@ class FoodHuntingEnv(gym.Env):
         # p.setTimeStep(1.0 / 240.0)
         p.setGravity(0, 0, self.GRAVITY)
         self.planeId = p.loadURDF('plane.urdf')
-        self.robot = self.robotModel(isDiscreteAction=self.isDiscreteAction)
+        self.robot = self.robotModel()
         self.foodIds = []
         for foodPos in self._generateFoodPositions(self.NUM_FOODS):
             foodId = p.loadURDF('sphere2red.urdf', foodPos, globalScaling=1.0)
@@ -521,7 +501,7 @@ class FoodHuntingEnv(gym.Env):
     def step(self, action):
         self.steps += 1
         self.robot.setAction(action)
-        reward = 0
+        reward = -0.01 # so agent needs to eat foods quickly
         for i in range(self.BULLET_STEPS_PER_GYM_STEP):
             p.stepSimulation()
             reward += self._getReward()
@@ -559,7 +539,7 @@ class FoodHuntingEnv(gym.Env):
             return np.array([r * np.sin(ang), r * np.cos(ang), 1.5])
         def isNear(pos, poss):
             for p in poss:
-                if np.linalg.norm(p - pos) < 1.0: # too close
+                if np.linalg.norm(p - pos) < 1.0:
                     return True
             return False
         def genPosRetry(poss):

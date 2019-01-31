@@ -1,5 +1,5 @@
 from gym.envs.registration import register
-from gym_foodhunting.foodhunting.gym_foodhunting import R2D2, HSR
+from gym_foodhunting.foodhunting.gym_foodhunting import R2D2, R2D2Discrete, HSR, HSRDiscrete
 
 # FoodHunting R2D2
 register(
@@ -7,7 +7,7 @@ register(
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
     max_episode_steps=100,
     reward_threshold=3.0,
-    kwargs={'render': False, 'discrete': False, 'robotModel': R2D2}
+    kwargs={'render': False, 'robotModel': R2D2}
 )
 
 register(
@@ -15,7 +15,7 @@ register(
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
     max_episode_steps=100,
     reward_threshold=3.0,
-    kwargs={'render': True, 'discrete': False, 'robotModel': R2D2}
+    kwargs={'render': True, 'robotModel': R2D2}
 )
 
 register(
@@ -23,7 +23,7 @@ register(
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
     max_episode_steps=100,
     reward_threshold=3.0,
-    kwargs={'render': False, 'discrete': True, 'robotModel': R2D2}
+    kwargs={'render': False, 'robotModel': R2D2Discrete}
 )
 
 register(
@@ -31,7 +31,7 @@ register(
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
     max_episode_steps=100,
     reward_threshold=3.0,
-    kwargs={'render': True, 'discrete': True, 'robotModel': R2D2}
+    kwargs={'render': True, 'robotModel': R2D2Discrete}
 )
 
 # FoodHunting HSR
@@ -40,7 +40,7 @@ register(
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
     max_episode_steps=100,
     reward_threshold=3.0,
-    kwargs={'render': False, 'discrete': False, 'robotModel': HSR}
+    kwargs={'render': False, 'robotModel': HSR}
 )
 
 register(
@@ -48,7 +48,7 @@ register(
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
     max_episode_steps=100,
     reward_threshold=3.0,
-    kwargs={'render': True, 'discrete': False, 'robotModel': HSR}
+    kwargs={'render': True, 'robotModel': HSR}
 )
 
 register(
@@ -56,7 +56,7 @@ register(
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
     max_episode_steps=100,
     reward_threshold=3.0,
-    kwargs={'render': False, 'discrete': True, 'robotModel': HSR}
+    kwargs={'render': False, 'robotModel': HSRDiscrete}
 )
 
 register(
@@ -64,5 +64,5 @@ register(
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
     max_episode_steps=100,
     reward_threshold=3.0,
-    kwargs={'render': True, 'discrete': True, 'robotModel': HSR}
+    kwargs={'render': True, 'robotModel': HSRDiscrete}
 )
