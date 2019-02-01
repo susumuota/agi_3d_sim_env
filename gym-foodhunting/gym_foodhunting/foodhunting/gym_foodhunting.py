@@ -166,24 +166,26 @@ class HSR(Robot):
 
     def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 0.05], orientation=[0.0, 0.0, 0.0, 1.0]):
         super(HSR, self).__init__(urdfPath, position, orientation)
-        self.robot.setArmPosition(1.0, -1.0, 0.0)
+        self.setArmPosition(1.0, -1.0, 0.0)
 
     # override methods
     @classmethod
     def getActionSpace(cls):
-        n = 19
+        # n = 20
+        n = 4
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
     def setAction(self, action):
         self.setWheelVelocity(action[0], action[1])
-        self.setBaseRollPosition(action[2])
-        self.setTorsoLiftPosition(action[3])
-        self.setHeadPosition(action[4], action[5])
-        self.setArmPosition(action[6], action[7], action[8])
-        self.setWristPosition(action[9], action[10])
-        self.setHandPosition(action[11], action[12], action[13], action[14], action[15], action[16], action[17], action[18], action[19])
+        # self.setBaseRollPosition(action[2])
+        # self.setTorsoLiftPosition(action[3])
+        # self.setHeadPosition(action[4], action[5])
+        # self.setArmPosition(action[6], action[7], action[8])
+        # self.setWristPosition(action[9], action[10])
+        # self.setHandPosition(action[11], action[12], action[13], action[14], action[15], action[16], action[17], action[18], action[19])
+        self.setArmPosition(action[2], action[3], 0.0)
 
     def setWheelVelocity(self, left, right):
         right = self.scaleJointVelocity(2, right)
@@ -214,13 +216,6 @@ class HSR(Robot):
                                     forces=[right, left])
 
     # HSR specific methods
-    def setBaseRollVelocity(self, roll):
-        roll = self.scaleJointVelocity(1, roll)
-        p.setJointMotorControl2(bodyIndex=self.robotId,
-                                jointIndex=1,
-                                controlMode=p.VELOCITY_CONTROL,
-                                targetVelocity=roll)
-
     def setBaseRollPosition(self, roll):
         orgRoll = roll
         roll, rollMaxVelocity = self.scaleJointPosition(1, roll) # TODO
@@ -389,7 +384,7 @@ class R2D2(Robot):
     # override methods
     @classmethod
     def getActionSpace(cls):
-        # n = 2
+        # n = 6
         n = 3
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
@@ -397,7 +392,9 @@ class R2D2(Robot):
 
     def setAction(self, action):
         self.setWheelVelocity(action[0], action[1])
-        self.setHeadPosition(action[2])
+        # self.setGripperPosition(action[2], action[3], action[4])
+        # self.setHeadPosition(action[5])
+        self.setGripperPosition(0.0, action[2], action[2])
 
     def setWheelVelocity(self, left, right):
         rf = self.scaleJointVelocity(2, right)
@@ -434,6 +431,29 @@ class R2D2(Robot):
                                     forces=[-rf, -rb, -lf, -lb])
 
     # R2D2 specific methods
+    def setGripperPosition(self, extension, left, right):
+        # 8, gripper_extension
+        # 9, left_gripper_joint
+        # 11, right_gripper_joint
+        extension, extensionMaxVelocity = self.scaleJointPosition(8, extension)
+        left, leftMaxVelocity = self.scaleJointPosition(9, left)
+        right, rightMaxVelocity = self.scaleJointPosition(11, right)
+        p.setJointMotorControl2(bodyIndex=self.robotId,
+                                jointIndex=8,
+                                controlMode=p.POSITION_CONTROL,
+                                maxVelocity=extensionMaxVelocity,
+                                targetPosition=extension)
+        p.setJointMotorControl2(bodyIndex=self.robotId,
+                                jointIndex=9,
+                                controlMode=p.POSITION_CONTROL,
+                                maxVelocity=leftMaxVelocity,
+                                targetPosition=left)
+        p.setJointMotorControl2(bodyIndex=self.robotId,
+                                jointIndex=11,
+                                controlMode=p.POSITION_CONTROL,
+                                maxVelocity=rightMaxVelocity,
+                                targetPosition=right)
+
     def setHeadPosition(self, pan):
         # 13, head_swivel
         pan, panMaxVelocity = self.scaleJointPosition(13, pan)
@@ -466,7 +486,7 @@ class FoodHuntingEnv(gym.Env):
         self.observation_space = robotModel.getObservationSpace() # classmethod
         self.action_space = robotModel.getActionSpace() # classmethod
         self.reward_range = (-1.0, 1.0)
-        # self.seed()
+        self.seed()
         ### pybullet settings
         self.physicsClient = p.connect(p.GUI if render else p.DIRECT)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
