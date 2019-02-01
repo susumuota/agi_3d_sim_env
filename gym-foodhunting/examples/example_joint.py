@@ -23,12 +23,13 @@ paramNames = [
 # for R2D2
 paramNames = [
     'wheel left', 'wheel right',
+    'gripper extension', 'gripper left', 'gripper right',
     'head pan'
 ]
 
 def main():
-    # env = gym.make('FoodHuntingHSRGUI-v0')
-    env = gym.make('FoodHuntingGUI-v0')
+    env = gym.make('FoodHuntingHSRGUI-v0')
+    # env = gym.make('FoodHuntingGUI-v0')
     params = [ p.addUserDebugParameter(paramName, -1.0, 1.0, 0.0) for paramName in paramNames ]
     obs = env.reset()
     while True:
