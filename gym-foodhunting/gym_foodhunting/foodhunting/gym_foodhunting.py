@@ -17,7 +17,7 @@
 import numpy as np
 import gym
 import gym.spaces
-import gym.utils
+from gym.utils import seeding
 import pybullet as p
 import pybullet_data
 
@@ -389,15 +389,15 @@ class R2D2(Robot):
     # override methods
     @classmethod
     def getActionSpace(cls):
-        n = 3
         # n = 2
+        n = 3
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
     def setAction(self, action):
         self.setWheelVelocity(action[0], action[1])
-        # self.setHeadPosition(action[2])
+        self.setHeadPosition(action[2])
 
     def setWheelVelocity(self, left, right):
         rf = self.scaleJointVelocity(2, right)
@@ -519,7 +519,7 @@ class FoodHuntingEnv(gym.Env):
         pass
 
     def seed(self, seed=None):
-        _, seed = np.utils.seeding.np_random(seed)
+        self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
     def _getReward(self):
@@ -534,8 +534,8 @@ class FoodHuntingEnv(gym.Env):
     def _generateFoodPositions(self, n):
         # TODO: parameterize
         def genPos():
-            r = 1.0 * np.random.rand() + 1.0
-            ang = 2.0 * np.pi * np.random.rand()
+            r = 1.0 * self.np_random.rand() + 1.0
+            ang = 2.0 * np.pi * self.np_random.rand()
             return np.array([r * np.sin(ang), r * np.cos(ang), 1.5])
         def isNear(pos, poss):
             for p in poss:
