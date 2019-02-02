@@ -90,7 +90,12 @@ class Robot:
         maxVelocity = abs(info[11])
         if lowerLimit > upperLimit:
             lowerLimit, upperLimit = upperLimit, lowerLimit # swap
-        value *= max(abs(lowerLimit), abs(upperLimit)) # TODO: is it OK?
+        # value *= max(abs(lowerLimit), abs(upperLimit)) # TODO: is it OK?
+        # y - l = a (x - -1) = a (x + 1)
+        # a = (u - l) / (1 - -1) = (u - l) / 2
+        # y - l = (u - l) (x + 1) / 2
+        # y = (u - l) (x + 1) * 0.5 + l
+        value = (upperLimit - lowerLimit) * (value + 1.0) * 0.5 + lowerLimit
         value = lowerLimit if value < lowerLimit else value
         value = upperLimit if value > upperLimit else value
         return value, maxVelocity
@@ -103,6 +108,24 @@ class Robot:
                                 controlMode=p.POSITION_CONTROL,
                                 maxVelocity=maxVelocity,
                                 targetPosition=value)
+
+    def invScaleJointPosition(self, jointIndex, value):
+        info = p.getJointInfo(self.robotId, jointIndex)
+        lowerLimit = info[8]
+        upperLimit = info[9]
+        # y - -1 = a (x - l)
+        # a = (1 - -1) / (u - l) = 2 / (u - l)
+        # y - -1 = 2 (x - l) / (u - l)
+        # y = 2 (x - l) / (u - l) - 1
+        value = 2.0 * (value - lowerLimit) / (upperLimit - lowerLimit) - 1.0
+        # value should be from -1.0 to 1.0
+        value = -1.0 if value < -1.0 else value
+        value =  1.0 if value >  1.0 else value
+        return value
+
+    def getJointPosition(self, jointIndex):
+        jointPosition, jointVelocity, jointReactionForces, appliedJointMotorTorque = p.getJointState(self.robotId, jointIndex)
+        return self.invScaleJointPosition(jointIndex, jointPosition)
 
     def scaleJointForce(self, jointIndex, value):
         # value should be from -1.0 to 1.0
@@ -181,25 +204,28 @@ class HSR(Robot):
 
     def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 0.05], orientation=[0.0, 0.0, 0.0, 1.0]):
         super(HSR, self).__init__(urdfPath, position, orientation)
-        # self.setArmPosition(1.0, -1.0, 0.0)
 
     # override methods
     @classmethod
     def getActionSpace(cls):
-        n = 11
+        n = 4
         # n = 20
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
+    # def setAction(self, action):
+    #     self.setWheelVelocity(action[0], action[1])
+    #     self.setBaseRollPosition(action[2])
+    #     self.setTorsoLiftPosition(action[3])
+    #     self.setHeadPosition(action[4], action[5])
+    #     self.setArmPosition(action[6], action[7], action[8])
+    #     self.setWristPosition(action[9], action[10])
+    #     self.setHandPosition(action[11], action[12], action[13], action[14], action[15], action[16], action[17], action[18], action[19])
+
     def setAction(self, action):
         self.setWheelVelocity(action[0], action[1])
-        self.setBaseRollPosition(action[2])
-        self.setTorsoLiftPosition(action[3])
-        self.setHeadPosition(action[4], action[5])
-        self.setArmPosition(action[6], action[7], action[8])
-        self.setWristPosition(action[9], action[10])
-        # self.setHandPosition(action[11], action[12], action[13], action[14], action[15], action[16], action[17], action[18], action[19])
+        self.setArmPosition(action[2], action[3], 0.0)
 
     # HSR specific methods
     def setWheelVelocity(self, left, right):
@@ -219,7 +245,7 @@ class HSR(Robot):
     def setArmPosition(self, lift, flex, roll):
         self.setJointPosition(23, lift)
         self.setJointPosition(24, flex)
-        self.setJointPosition(25, roll)
+        # self.setJointPosition(25, roll)
 
     def setWristPosition(self, flex, roll):
         self.setJointPosition(26, flex)
