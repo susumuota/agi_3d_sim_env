@@ -208,7 +208,7 @@ class HSR(Robot):
     # override methods
     @classmethod
     def getActionSpace(cls):
-        n = 4
+        n = 5
         # n = 20
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
@@ -226,6 +226,7 @@ class HSR(Robot):
     def setAction(self, action):
         self.setWheelVelocity(action[0], action[1])
         self.setArmPosition(action[2], action[3], 0.0)
+        self.setWristPosition(action[4], 0.0)
 
     # HSR specific methods
     def setWheelVelocity(self, left, right):
@@ -245,7 +246,7 @@ class HSR(Robot):
     def setArmPosition(self, lift, flex, roll):
         self.setJointPosition(23, lift)
         self.setJointPosition(24, flex)
-        # self.setJointPosition(25, roll)
+        self.setJointPosition(25, roll)
 
     def setWristPosition(self, flex, roll):
         self.setJointPosition(26, flex)
