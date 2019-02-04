@@ -25,6 +25,7 @@ def learn(env_name, load_file, save_file, total_timesteps, n_cpu, reward_thresho
     best_mean_reward = -np.inf
     best_mean_step = np.inf
     counter = 0
+    save_file = env_name if save_file is None else save_file
     best_save_file = save_file + BEST_SAVE_FILE_SUFFIX
     start_time = time.time()
     def callback(_locals, _globals):
@@ -75,14 +76,14 @@ def play(env_name, load_file, total_timesteps, n_cpu):
     model = PPO2.load(load_file, verbose=1)
     env = SubprocVecEnv([make_env(env_name, i) for i in range(1 if isGUI else n_cpu)])
     obss = env.reset()
-    obss = reshapeObservation(obss, n_cpu) if isGUI and n_cpu != 1 else obss
+    obss = reshapeObservation(obss, n_cpu) if isGUI else obss
     rewards_buf = []
     steps_buf = []
     for i in range(total_timesteps):
         actions, _states = model.predict(obss)
         actions = actions[0:1] if isGUI else actions
         obss, rewards, dones, infos = env.step(actions)
-        obss = reshapeObservation(obss, n_cpu) if isGUI and n_cpu != 1 else obss
+        obss = reshapeObservation(obss, n_cpu) if isGUI else obss
         # env.render() # dummy
         if dones.any():
             rewards_buf.extend([ info['episode']['r'] for info in infos if 'episode' in info ])
@@ -95,7 +96,7 @@ if __name__ == '__main__':
     parser.add_argument('--play', action='store_true', help='play or learn.')
     parser.add_argument('--env_name', type=str, default='FoodHunting-v0', help='environment name.')
     parser.add_argument('--load_file', type=str, default=None, help='filename to load model.')
-    parser.add_argument('--save_file', type=str, default='foodhunting', help='filename to save model.')
+    parser.add_argument('--save_file', type=str, default=None, help='filename to save model.')
     parser.add_argument('--total_timesteps', type=int, default=500000, help='total timesteps.')
     parser.add_argument('--n_cpu', type=int, default=4, help='number of CPU cores.')
     parser.add_argument('--reward_threshold', type=float, default=3.0, help='reward threshold to finish learning.')
