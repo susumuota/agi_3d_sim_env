@@ -64,7 +64,7 @@ def learn(env_name, load_file, save_file, total_timesteps, n_cpu, reward_thresho
     model.save(save_file)
     env.close()
 
-def reshapeObservation(obss, n_cpu):
+def duplicate_obs(obss, n_cpu):
     # before: (    1, 64, 64, 4)
     # after:  (n_cpu, 64, 64, 4)
     for i in range(n_cpu-1):
@@ -76,14 +76,14 @@ def play(env_name, load_file, total_timesteps, n_cpu):
     model = PPO2.load(load_file, verbose=1)
     env = SubprocVecEnv([make_env(env_name, i) for i in range(1 if isGUI else n_cpu)])
     obss = env.reset()
-    obss = reshapeObservation(obss, n_cpu) if isGUI else obss
+    obss = duplicate_obs(obss, n_cpu) if isGUI else obss
     rewards_buf = []
     steps_buf = []
     for i in range(total_timesteps):
         actions, _states = model.predict(obss)
         actions = actions[0:1] if isGUI else actions
         obss, rewards, dones, infos = env.step(actions)
-        obss = reshapeObservation(obss, n_cpu) if isGUI else obss
+        obss = duplicate_obs(obss, n_cpu) if isGUI else obss
         # env.render() # dummy
         if dones.any():
             rewards_buf.extend([ info['episode']['r'] for info in infos if 'episode' in info ])
