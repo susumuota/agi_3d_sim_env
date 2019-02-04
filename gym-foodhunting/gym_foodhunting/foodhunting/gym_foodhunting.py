@@ -330,23 +330,25 @@ class FoodHuntingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     GRAVITY = -10.0
-    BULLET_STEPS_PER_GYM_STEP = 200
 
-    def __init__(self, render=False, robotModel=R2D2, max_steps=100, num_foods=3):
+    def __init__(self, render=False, robot_model=R2D2, max_steps=100, num_foods=3, food_size=1.0, bullet_steps=200):
         ### gym variables
-        self.observation_space = robotModel.getObservationSpace() # classmethod
-        self.action_space = robotModel.getActionSpace() # classmethod
+        self.observation_space = robot_model.getObservationSpace() # classmethod
+        self.action_space = robot_model.getActionSpace() # classmethod
         self.reward_range = (-1.0, 1.0)
         self.seed()
         ### pybullet settings
         self.physicsClient = p.connect(p.GUI if render else p.DIRECT)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
-        self.robotModel = robotModel
-        self.num_foods = num_foods
+        ### env variables
+        self.robot_model = robot_model
         self.max_steps = max_steps
-        self.planeId = None
+        self.num_foods = num_foods
+        self.food_size = food_size
+        self.bullet_steps = bullet_steps
+        self.plane_id = None
         self.robot = None
-        self.foodIds = []
+        self.food_ids = []
         ### episode variables
         self.steps = 0
         self.episode_rewards = 0.0
@@ -360,13 +362,13 @@ class FoodHuntingEnv(gym.Env):
         p.resetSimulation()
         # p.setTimeStep(1.0 / 240.0)
         p.setGravity(0, 0, self.GRAVITY)
-        self.planeId = p.loadURDF('plane.urdf')
-        self.robot = self.robotModel()
-        self.foodIds = []
-        for foodPos in self._generateFoodPositions(self.num_foods):
-            foodId = p.loadURDF('sphere2red.urdf', foodPos, globalScaling=1.0)
-            self.foodIds.append(foodId)
-        for i in range(self.BULLET_STEPS_PER_GYM_STEP):
+        self.plane_id = p.loadURDF('plane.urdf')
+        self.robot = self.robot_model()
+        self.food_ids = []
+        for food_pos in self._generateFoodPositions(self.num_foods):
+            food_id = p.loadURDF('sphere2red.urdf', food_pos, globalScaling=self.food_size)
+            self.food_ids.append(food_id)
+        for i in range(self.bullet_steps):
             p.stepSimulation()
         obs = self.robot.getObservation()
         return obs
@@ -374,15 +376,15 @@ class FoodHuntingEnv(gym.Env):
     def step(self, action):
         self.steps += 1
         self.robot.setAction(action)
-        reward = -0.01 # so agent needs to eat foods quickly
-        for i in range(self.BULLET_STEPS_PER_GYM_STEP):
+        reward = -1.0 * float(self.num_foods) / float(self.max_steps) # so agent needs to eat foods quickly
+        for i in range(self.bullet_steps):
             p.stepSimulation()
             reward += self._getReward()
         self.episode_rewards += reward
         obs = self.robot.getObservation()
-        done = self.steps >= self.max_steps or len(self.foodIds) <= 0
-        robotPos, robotOrn = self.robot.getPositionAndOrientation()
-        info = { 'steps': self.steps, 'pos': robotPos, 'orn': robotOrn }
+        done = self.steps >= self.max_steps or len(self.food_ids) <= 0
+        pos, orn = self.robot.getPositionAndOrientation()
+        info = { 'steps': self.steps, 'pos': pos, 'orn': orn }
         if done:
             info['episode'] = { 'r': self.episode_rewards, 'l': self.steps }
             # print(self.episode_rewards, self.steps)
@@ -397,10 +399,10 @@ class FoodHuntingEnv(gym.Env):
 
     def _getReward(self):
         reward = 0
-        contactedFoodIds = [ foodId for foodId in self.foodIds if self.robot.isContact(foodId) ]
-        for foodId in contactedFoodIds:
-            p.removeBody(foodId)
-            self.foodIds.remove(foodId)
+        contacted_food_ids = [ food_id for food_id in self.food_ids if self.robot.isContact(food_id) ]
+        for food_id in contacted_food_ids:
+            p.removeBody(food_id)
+            self.food_ids.remove(food_id)
             reward += 1
         return reward
 
@@ -408,7 +410,12 @@ class FoodHuntingEnv(gym.Env):
         # TODO: parameterize
         def genPos():
             r = 1.0 * self.np_random.rand() + 1.0
-            ang = 2.0 * np.pi * self.np_random.rand()
+            #ang = 2.0 * np.pi * self.np_random.rand()
+            scale = 0.25
+            offset = 0.5 * np.pi
+            a = -np.pi * scale + offset
+            b =  np.pi * scale + offset
+            ang = (b - a) * self.np_random.rand() + a
             return np.array([r * np.sin(ang), r * np.cos(ang), 1.5])
         def isNear(pos, poss):
             for p in poss:
