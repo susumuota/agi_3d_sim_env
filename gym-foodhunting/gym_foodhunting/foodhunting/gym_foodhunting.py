@@ -159,8 +159,8 @@ class Robot:
         eyePos = cameraPos + self.CAMERA_EYE_SCALE * cameraMat[self.CAMERA_EYE_INDEX]
         targetPos = cameraPos + self.CAMERA_TARGET_SCALE * cameraMat[self.CAMERA_EYE_INDEX]
         up = self.CAMERA_UP_SCALE * cameraMat[self.CAMERA_UP_INDEX]
-        p.addUserDebugLine(eyePos, targetPos, lineColorRGB=[1, 0, 0], lifeTime=0.1) # red line for camera vector
-        p.addUserDebugLine(eyePos, eyePos + up * 0.5, lineColorRGB=[0, 0, 1], lifeTime=0.1) # blue line for up vector
+        #p.addUserDebugLine(eyePos, targetPos, lineColorRGB=[1, 0, 0], lifeTime=0.1) # red line for camera vector
+        #p.addUserDebugLine(eyePos, eyePos + up * 0.5, lineColorRGB=[0, 0, 1], lifeTime=0.1) # blue line for up vector
         viewMatrix = p.computeViewMatrix(eyePos, targetPos, up)
         image = p.getCameraImage(self.CAMERA_PIXEL_WIDTH, self.CAMERA_PIXEL_HEIGHT, viewMatrix, self.projectionMatrix, shadow=1, lightDirection=[1, 1, 1], renderer=p.ER_BULLET_HARDWARE_OPENGL)
         return image
@@ -208,25 +208,18 @@ class HSR(Robot):
     # override methods
     @classmethod
     def getActionSpace(cls):
-        n = 5
-        # n = 20
+        n = 11
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
-    # def setAction(self, action):
-    #     self.setWheelVelocity(action[0], action[1])
-    #     self.setBaseRollPosition(action[2])
-    #     self.setTorsoLiftPosition(action[3])
-    #     self.setHeadPosition(action[4], action[5])
-    #     self.setArmPosition(action[6], action[7], action[8])
-    #     self.setWristPosition(action[9], action[10])
-    #     self.setHandPosition(action[11], action[12], action[13], action[14], action[15], action[16], action[17], action[18], action[19])
-
     def setAction(self, action):
         self.setWheelVelocity(action[0], action[1])
-        self.setArmPosition(action[2], action[3], 0.0)
-        self.setWristPosition(action[4], 0.0)
+        self.setBaseRollPosition(action[2])
+        self.setTorsoLiftPosition(action[3])
+        self.setHeadPosition(action[4], action[5])
+        self.setArmPosition(action[6], action[7], action[8])
+        self.setWristPosition(action[9], action[10])
 
     # HSR specific methods
     def setWheelVelocity(self, left, right):
@@ -252,7 +245,7 @@ class HSR(Robot):
         self.setJointPosition(26, flex)
         self.setJointPosition(27, roll)
 
-    def setHandPosition(self, motor, leftProximal, leftSpringProximal, leftMimicDistal, leftDistal, rightProximal, rightSpringProximal, rightMimicDistal, rightDistal):
+    def setHandPosition(self, motor, leftProximal, leftSpringProximal, leftMimicDistal, leftDistal, rightProximal, rightSpringProximal, rightMimicDistal, rightDistal): # TODO
         self.setJointPosition(30, motor)
         self.setJointPosition(31, leftProximal)
         self.setJointPosition(32, leftSpringProximal)
@@ -262,6 +255,20 @@ class HSR(Robot):
         self.setJointPosition(38, rightSpringProximal)
         self.setJointPosition(39, rightMimicDistal)
         self.setJointPosition(40, rightDistal)
+
+class HSRSimple(HSR):
+    @classmethod
+    def getActionSpace(cls):
+        n = 5
+        low = -1.0 * np.ones(n)
+        high = 1.0 * np.ones(n)
+        return gym.spaces.Box(low=low, high=high, dtype=np.float32)
+
+    def setAction(self, action):
+        self.setWheelVelocity(action[0], action[1])
+        self.setArmPosition(action[2], action[3], 0.0)
+        self.setWristPosition(action[4], 0.0)
+
 
 class HSRDiscrete(HSR):
     ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0] ]
@@ -332,7 +339,7 @@ class FoodHuntingEnv(gym.Env):
 
     GRAVITY = -10.0
 
-    def __init__(self, render=False, robot_model=R2D2, max_steps=100, num_foods=3, food_size=1.0, bullet_steps=200):
+    def __init__(self, render=False, robot_model=R2D2, max_steps=100, num_foods=3, food_size=1.0, food_angle_scale=1.0, bullet_steps=200):
         ### gym variables
         self.observation_space = robot_model.getObservationSpace() # classmethod
         self.action_space = robot_model.getActionSpace() # classmethod
@@ -346,6 +353,7 @@ class FoodHuntingEnv(gym.Env):
         self.max_steps = max_steps
         self.num_foods = num_foods
         self.food_size = food_size
+        self.food_angle_scale = food_angle_scale
         self.bullet_steps = bullet_steps
         self.plane_id = None
         self.robot = None
@@ -366,7 +374,7 @@ class FoodHuntingEnv(gym.Env):
         self.plane_id = p.loadURDF('plane.urdf')
         self.robot = self.robot_model()
         self.food_ids = []
-        for food_pos in self._generateFoodPositions(self.num_foods):
+        for food_pos in self._generateFoodPositions(num=self.num_foods, angle_scale=self.food_angle_scale):
             food_id = p.loadURDF('sphere2red.urdf', food_pos, globalScaling=self.food_size)
             self.food_ids.append(food_id)
         for i in range(self.bullet_steps):
@@ -407,30 +415,27 @@ class FoodHuntingEnv(gym.Env):
             reward += 1
         return reward
 
-    def _generateFoodPositions(self, n):
-        # TODO: parameterize
+    def _generateFoodPositions(self, num=1, retry=100, radius_scale=1.0, radius_offset=1.0, angle_scale=0.25, angle_offset=0.5*np.pi, z=1.5, near_distance=1.0):
         def genPos():
-            r = 1.0 * self.np_random.rand() + 1.0
+            r = radius_scale * self.np_random.rand() + radius_offset
             #ang = 2.0 * np.pi * self.np_random.rand()
-            scale = 0.25
-            offset = 0.5 * np.pi
-            a = -np.pi * scale + offset
-            b =  np.pi * scale + offset
+            a = -np.pi * angle_scale + angle_offset
+            b =  np.pi * angle_scale + angle_offset
             ang = (b - a) * self.np_random.rand() + a
-            return np.array([r * np.sin(ang), r * np.cos(ang), 1.5])
+            return np.array([r * np.sin(ang), r * np.cos(ang), z])
         def isNear(pos, poss):
             for p in poss:
-                if np.linalg.norm(p - pos) < 1.0:
+                if np.linalg.norm(p - pos) < near_distance:
                     return True
             return False
         def genPosRetry(poss):
-            for i in range(10):
+            for i in range(retry):
                 pos = genPos()
                 if not isNear(pos, poss):
                     return pos
             return genPos()
         poss = []
-        for i in range(n):
+        for i in range(num):
             pos = genPosRetry(poss)
             poss.append(pos)
         return poss
