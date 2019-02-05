@@ -220,6 +220,7 @@ class HSR(Robot):
         self.setHeadPosition(action[4], action[5])
         self.setArmPosition(action[6], action[7], action[8])
         self.setWristPosition(action[9], action[10])
+        # self.setHandPosition(action[11], action[12], action[13], action[14], action[15], action[16], action[17], action[18], action[19]) # TODO
 
     # HSR specific methods
     def setWheelVelocity(self, left, right):
@@ -275,7 +276,7 @@ class HSRDiscrete(HSR):
 
     @classmethod
     def getActionSpace(cls):
-        return gym.spaces.Discrete(3) # 0, 1, 2
+        return gym.spaces.Discrete(len(cls.ACTIONS))
 
     def setAction(self, action):
         self.setWheelVelocity(*self.ACTIONS[action])
@@ -298,7 +299,6 @@ class R2D2(Robot):
     @classmethod
     def getActionSpace(cls):
         n = 6
-        # n = 3
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
@@ -329,7 +329,7 @@ class R2D2Discrete(R2D2):
 
     @classmethod
     def getActionSpace(cls):
-        return gym.spaces.Discrete(3) # 0, 1, 2
+        return gym.spaces.Discrete(len(cls.ACTIONS))
 
     def setAction(self, action):
         self.setWheelVelocity(*self.ACTIONS[action])
