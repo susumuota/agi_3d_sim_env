@@ -152,6 +152,8 @@ python examples/example_rl.py --env_name="FoodHuntingDiscreteGUI-v0" --total_tim
 
 ## More practical reinforcement learning example
 
+See https://github.com/susumuota/agi_3d_sim_env/blob/master/gym-foodhunting/agents/ppo_agent.py
+
 ```
 cd gym-foodhunting
 
