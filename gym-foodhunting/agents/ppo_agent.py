@@ -68,11 +68,14 @@ def duplicate_obs(obss, n_cpu):
     # before: (    1, 64, 64, 4)
     # after:  (n_cpu, 64, 64, 4)
     for i in range(n_cpu-1):
-        obss = np.insert(obss, [i+1], obss[0], axis=0)
+        obss = np.insert(obss, [i+1], obss[0], axis=0) # padding obss[0]
     return obss
 
 def play(env_name, load_file, total_timesteps, n_cpu):
-    isGUI = env_name.find('GUI') != -1 # if it's GUI mode, number of env is changed to 1. but trained LSTM model cannot change number of env. so it needs to reshape observation.
+    # if it's GUI mode, number of env is changed to 1 to reduce GUI windows.
+    # but trained LSTM model cannot change number of env.
+    # so it needs to reshape observation by padding dummy data.
+    isGUI = env_name.find('GUI') != -1
     model = PPO2.load(load_file, verbose=1)
     env = SubprocVecEnv([make_env(env_name, i) for i in range(1 if isGUI else n_cpu)])
     obss = env.reset()
@@ -98,7 +101,7 @@ if __name__ == '__main__':
     parser.add_argument('--load_file', type=str, default=None, help='filename to load model.')
     parser.add_argument('--save_file', type=str, default=None, help='filename to save model.')
     parser.add_argument('--total_timesteps', type=int, default=500000, help='total timesteps.')
-    parser.add_argument('--n_cpu', type=int, default=4, help='number of CPU cores.')
+    parser.add_argument('--n_cpu', type=int, default=8, help='number of CPU cores.')
     parser.add_argument('--reward_threshold', type=float, default=3.0, help='reward threshold to finish learning.')
     args = parser.parse_args()
 
