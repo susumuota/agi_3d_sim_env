@@ -30,6 +30,7 @@ git clone https://github.com/ToyotaResearchInstitute/hsr_meshes.git
 
 cp -p hsr_description/robots/hsrb4s.urdf venv/lib/python3.6/site-packages/pybullet_data
 cp -rp hsr_meshes venv/lib/python3.6/site-packages/pybullet_data
+cp -p gym-foodhunting/urdf/r2d2.urdf venv/lib/python3.6/site-packages/pybullet_data
 
 cd gym-foodhunting
 pip install -e .
@@ -53,7 +54,7 @@ pip uninstall numpy
 
 # Example
 
-## Simplest Example
+## Simplest example
 
 ```python
 import gym
@@ -91,7 +92,65 @@ if __name__ == '__main__':
     main()
 ```
 
-## Reinforcement Learning Example
+## Simple reinforcement learning example
+
+```
+import argparse
+import gym
+import gym_foodhunting
+
+from stable_baselines.common.policies import CnnPolicy
+from stable_baselines.common.vec_env import DummyVecEnv
+from stable_baselines import PPO2
+
+def learn(env_name, save_file, total_timesteps):
+    env = DummyVecEnv([lambda: gym.make(env_name)])
+    model = PPO2(CnnPolicy, env, verbose=1)
+    model.learn(total_timesteps=total_timesteps)
+    model.save(save_file)
+    del model
+    env.close()
+
+def play(env_name, load_file, total_timesteps):
+    env = DummyVecEnv([lambda: gym.make(env_name)])
+    model = PPO2.load(load_file, verbose=1)
+    obs = env.reset()
+    for i in range(total_timesteps):
+        action, _states = model.predict(obs)
+        obs, reward, done, info = env.step(action)
+        # env.render() # dummy
+        if done:
+            print(info)
+    del model
+    env.close()
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--play', action='store_true', help='play or learn.')
+    parser.add_argument('--env_name', type=str, default='FoodHuntingDiscreteGUI-v0', help='environment name.')
+    parser.add_argument('--filename', type=str, default='saved_model', help='filename to save/load model.')
+    parser.add_argument('--total_timesteps', type=int, default=10000, help='total timesteps.')
+    args = parser.parse_args()
+    if args.play:
+        play(args.env_name, args.filename, args.total_timesteps)
+    else:
+        learn(args.env_name, args.filename, args.total_timesteps)
+```
+
+```
+# Learn
+python examples/example_rl.py --env_name="FoodHuntingDiscrete-v0" --total_timesteps=10000 --filename="saved_model"
+```
+
+```
+# Play without GUI
+python examples/example_rl.py --env_name="FoodHuntingDiscrete-v0" --total_timesteps=10000 --filename="saved_model" --play
+
+# Play with GUI
+python examples/example_rl.py --env_name="FoodHuntingDiscreteGUI-v0" --total_timesteps=10000 --filename="saved_model" --play
+```
+
+## More practical reinforcement learning example
 
 ```
 cd gym-foodhunting
@@ -103,20 +162,33 @@ cd gym-foodhunting
 # See available options.
 python agents/ppo_agent.py --help
 
-# This may take an hour. Discrete action environments is easier than continuous one.
-time python agents/ppo_agent.py --discrete
+# Learn
+# This may take a few hours.
+time python agents/ppo_agent.py --env_name="FoodHuntingHSR-v1"
 
+# Play with GUI
 # This will open PyBullet window.
-time python agents/ppo_agent.py --discrete --render --play
+time python agents/ppo_agent.py --env_name="FoodHuntingHSRGUI-v1" --load_file="FoodHuntingHSR-v1_best.pkl" --play
 ```
 
 # Available Environments
 
 ```
+
+# R2D2 model
 FoodHunting-v0             # continuous action, without rendering
 FoodHuntingGUI-v0          # continuous action, with rendering
 FoodHuntingDiscrete-v0     # discrete action, without rendering
 FoodHuntingDiscreteGUI-v0  # discrete action, with rendering
+
+# HSR model
+FoodHuntingHSR-v0
+FoodHuntingHSRGUI-v0
+FoodHuntingHSR-v1
+FoodHuntingHSRGUI-v1
+FoodHuntingHSRDiscrete-v0
+FoodHuntingHSRDiscreteGUI-v0
+FoodHuntingHSRFullGUI-v0
 ```
 
 # Author
