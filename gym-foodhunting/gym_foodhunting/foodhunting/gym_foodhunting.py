@@ -55,11 +55,7 @@ class Robot:
 
     @classmethod
     def getActionSpace(cls):
-        # raise NotImplementedError
-        n = 2
-        low = -1.0 * np.ones(n)
-        high = 1.0 * np.ones(n)
-        return gym.spaces.Box(low=low, high=high, dtype=np.float32)
+        raise NotImplementedError
 
     def setAction(self, action):
         raise NotImplementedError
