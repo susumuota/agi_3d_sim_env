@@ -83,3 +83,10 @@ register(
     kwargs={'render': True, 'robot_model': HSRDiscrete, 'max_steps': 200, 'num_foods': 3, 'food_size': 1.0, 'food_angle_scale': 1.0, 'bullet_steps': 100}
 )
 
+register(
+    id='FoodHuntingHSRFullGUI-v0',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=200,
+    reward_threshold=3.0,
+    kwargs={'render': True, 'robot_model': HSR, 'max_steps': 200, 'num_foods': 1, 'food_size': 1.0, 'food_angle_scale': 1.0, 'bullet_steps': 100}
+)
