@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
 ## Simple reinforcement learning example
 
-```
+```python
 import argparse
 import gym
 import gym_foodhunting
