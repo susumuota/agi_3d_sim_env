@@ -335,7 +335,7 @@ class FoodHuntingEnv(gym.Env):
 
     GRAVITY = -10.0
 
-    def __init__(self, render=False, robot_model=R2D2, max_steps=100, num_foods=3, food_size=1.0, food_angle_scale=1.0, bullet_steps=200):
+    def __init__(self, render=False, robot_model=R2D2, max_steps=200, num_foods=3, food_size=1.0, food_angle_scale=1.0, bullet_steps=100):
         ### gym variables
         self.observation_space = robot_model.getObservationSpace() # classmethod
         self.action_space = robot_model.getActionSpace() # classmethod
