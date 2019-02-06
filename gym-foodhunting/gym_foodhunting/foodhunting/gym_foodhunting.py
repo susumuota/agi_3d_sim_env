@@ -303,7 +303,6 @@ class R2D2(Robot):
         self.setWheelVelocity(action[0], action[1])
         self.setGripperPosition(action[2], action[3], action[4])
         self.setHeadPosition(action[5])
-        # self.setGripperPosition(0.0, action[2], action[2])
 
     # R2D2 specific methods
     def setWheelVelocity(self, left, right):
@@ -320,6 +319,18 @@ class R2D2(Robot):
     def setHeadPosition(self, pan):
         self.setJointPosition(13, pan)
 
+class R2D2Simple(R2D2):
+    @classmethod
+    def getActionSpace(cls):
+        n = 6
+        low = -1.0 * np.ones(n)
+        high = 1.0 * np.ones(n)
+        return gym.spaces.Box(low=low, high=high, dtype=np.float32)
+
+    def setAction(self, action):
+        self.setWheelVelocity(action[0], action[1])
+        self.setGripperPosition(1.0, action[2], action[2])
+
 class R2D2Discrete(R2D2):
     ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0] ]
 
@@ -334,8 +345,9 @@ class FoodHuntingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     GRAVITY = -10.0
+    BULLET_STEPS = 100
 
-    def __init__(self, render=False, robot_model=R2D2, max_steps=200, num_foods=3, food_size=1.0, food_angle_scale=1.0, bullet_steps=100):
+    def __init__(self, render=False, robot_model=R2D2, max_steps=200, num_foods=3, food_size=1.0, food_radius_scale=1.0, food_angle_scale=1.0):
         ### gym variables
         self.observation_space = robot_model.getObservationSpace() # classmethod
         self.action_space = robot_model.getActionSpace() # classmethod
@@ -350,7 +362,7 @@ class FoodHuntingEnv(gym.Env):
         self.num_foods = num_foods
         self.food_size = food_size
         self.food_angle_scale = food_angle_scale
-        self.bullet_steps = bullet_steps
+        self.food_radius_scale = food_radius_scale
         self.plane_id = None
         self.robot = None
         self.food_ids = []
@@ -370,10 +382,10 @@ class FoodHuntingEnv(gym.Env):
         self.plane_id = p.loadURDF('plane.urdf')
         self.robot = self.robot_model()
         self.food_ids = []
-        for food_pos in self._generateFoodPositions(num=self.num_foods, angle_scale=self.food_angle_scale):
+        for food_pos in self._generateFoodPositions(num=self.num_foods, angle_scale=self.food_angle_scale, radius_scale=self.food_radius_scale):
             food_id = p.loadURDF('sphere2red.urdf', food_pos, globalScaling=self.food_size)
             self.food_ids.append(food_id)
-        for i in range(self.bullet_steps):
+        for i in range(self.BULLET_STEPS):
             p.stepSimulation()
         obs = self.robot.getObservation()
         return obs
@@ -382,7 +394,7 @@ class FoodHuntingEnv(gym.Env):
         self.steps += 1
         self.robot.setAction(action)
         reward = -1.0 * float(self.num_foods) / float(self.max_steps) # so agent needs to eat foods quickly
-        for i in range(self.bullet_steps):
+        for i in range(self.BULLET_STEPS):
             p.stepSimulation()
             reward += self._getReward()
         self.episode_rewards += reward

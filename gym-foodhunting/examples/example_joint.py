@@ -28,7 +28,7 @@ paramNames = [
 # ]
 
 def main():
-    env = gym.make('FoodHuntingHSRFullGUI-v0')
+    env = gym.make('FoodHuntingHSRTestGUI-v0')
     # env = gym.make('FoodHuntingGUI-v1')
     params = [ p.addUserDebugParameter(paramName, -1.0, 1.0, 0.0) for paramName in paramNames ]
     obs = env.reset()
