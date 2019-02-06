@@ -144,7 +144,7 @@ class Robot:
         return p.getBasePositionAndOrientation(self.robotId)
 
     def isContact(self, bodyId):
-        cps = p.getContactPoints(self.robotId, bodyId)
+        cps = p.getContactPoints(bodyA=self.robotId, bodyB=bodyId)
         return len(cps) > 0
 
     def getCameraImage(self):
@@ -218,6 +218,10 @@ class HSR(Robot):
         self.setWristPosition(action[9], action[10])
         # self.setHandPosition(action[11], action[12], action[13], action[14], action[15], action[16], action[17], action[18], action[19]) # TODO
 
+    def isContact(self, bodyId):
+        cps = p.getContactPoints(bodyA=self.robotId, bodyB=bodyId, linkIndexA=27) # only for wrist_roll_link
+        return len(cps) > 0
+
     # HSR specific methods
     def setWheelVelocity(self, left, right):
         self.setJointVelocity(2, right, 0.25)
@@ -242,16 +246,16 @@ class HSR(Robot):
         self.setJointPosition(26, flex)
         self.setJointPosition(27, roll)
 
-    def setHandPosition(self, motor, leftProximal, leftSpringProximal, leftMimicDistal, leftDistal, rightProximal, rightSpringProximal, rightMimicDistal, rightDistal): # TODO
-        self.setJointPosition(30, motor)
-        self.setJointPosition(31, leftProximal)
-        self.setJointPosition(32, leftSpringProximal)
-        self.setJointPosition(33, leftMimicDistal)
-        self.setJointPosition(34, leftDistal)
-        self.setJointPosition(37, rightProximal)
-        self.setJointPosition(38, rightSpringProximal)
-        self.setJointPosition(39, rightMimicDistal)
-        self.setJointPosition(40, rightDistal)
+    # def setHandPosition(self, motor, leftProximal, leftSpringProximal, leftMimicDistal, leftDistal, rightProximal, rightSpringProximal, rightMimicDistal, rightDistal): # TODO
+    #     self.setJointPosition(30, motor)
+    #     self.setJointPosition(31, leftProximal)
+    #     self.setJointPosition(32, leftSpringProximal)
+    #     self.setJointPosition(33, leftMimicDistal)
+    #     self.setJointPosition(34, leftDistal)
+    #     self.setJointPosition(37, rightProximal)
+    #     self.setJointPosition(38, rightSpringProximal)
+    #     self.setJointPosition(39, rightMimicDistal)
+    #     self.setJointPosition(40, rightDistal)
 
 class HSRSimple(HSR):
     @classmethod
@@ -322,14 +326,14 @@ class R2D2(Robot):
 class R2D2Simple(R2D2):
     @classmethod
     def getActionSpace(cls):
-        n = 6
+        n = 2
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
     def setAction(self, action):
         self.setWheelVelocity(action[0], action[1])
-        self.setGripperPosition(1.0, action[2], action[2])
+        # self.setGripperPosition(1.0, action[2], action[2])
 
 class R2D2Discrete(R2D2):
     ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0] ]
