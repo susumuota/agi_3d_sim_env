@@ -29,7 +29,7 @@ class Robot:
     # projectionMatrix settings
     CAMERA_PIXEL_WIDTH = 64 # 64 is minimum for stable-baselines
     CAMERA_PIXEL_HEIGHT = 64 # 64 is minimum for stable-baselines
-    CAMERA_FOV = 90.0
+    CAMERA_FOV = 110.0
     CAMERA_NEAR_PLANE = 0.01
     CAMERA_FAR_PLANE = 100.0
 
