@@ -45,22 +45,32 @@ class Robot:
     JOINT_TYPE_NAMES = ['JOINT_REVOLUTE', 'JOINT_PRISMATIC', 'JOINT_SPHERICAL', 'JOINT_PLANAR', 'JOINT_FIXED']
 
     def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 1.0], orientation=[0.0, 0.0, 0.0, 1.0]):
+        """Make a robot model.
+        """
         self.urdfPath = urdfPath
         self.robotId = p.loadURDF(urdfPath, basePosition=position, baseOrientation=orientation)
         self.projectionMatrix = p.computeProjectionMatrixFOV(self.CAMERA_FOV, float(self.CAMERA_PIXEL_WIDTH)/float(self.CAMERA_PIXEL_HEIGHT), self.CAMERA_NEAR_PLANE, self.CAMERA_FAR_PLANE);
 
     @classmethod
     def getObservationSpace(cls):
+        """Return observation_space for gym Env class.
+        """
         return gym.spaces.Box(low=0.0, high=1.0, shape=(Robot.CAMERA_PIXEL_HEIGHT, Robot.CAMERA_PIXEL_WIDTH, 4), dtype=np.float32)
 
     @classmethod
     def getActionSpace(cls):
+        """Return action_space for gym Env class.
+        """
         raise NotImplementedError
 
     def setAction(self, action):
+        """Set action.
+        """
         raise NotImplementedError
 
     def scaleJointVelocity(self, jointIndex, value):
+        """Scale joint velocity from [-1.0, 1.0] to [-maxVelocity, maxVelocity].
+        """
         # value should be from -1.0 to 1.0
         info = p.getJointInfo(self.robotId, jointIndex)
         maxVelocity = abs(info[11])
@@ -79,6 +89,8 @@ class Robot:
                                 targetVelocity=value)
 
     def scaleJointPosition(self, jointIndex, value):
+        """Scale joint position from [-1.0, 1.0] to [lowerLimit, upperLimit].
+        """
         # value should be from -1.0 to 1.0
         info = p.getJointInfo(self.robotId, jointIndex)
         lowerLimit = info[8]
@@ -260,7 +272,7 @@ class HSR(Robot):
 class HSRSimple(HSR):
     @classmethod
     def getActionSpace(cls):
-        n = 5
+        n = 6
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
@@ -269,6 +281,7 @@ class HSRSimple(HSR):
         self.setWheelVelocity(action[0], action[1])
         self.setArmPosition(action[2], action[3], 0.0)
         self.setWristPosition(action[4], 0.0)
+        self.setHeadPosition(0.0, action[5])
 
 
 class HSRDiscrete(HSR):
@@ -349,9 +362,9 @@ class FoodHuntingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     GRAVITY = -10.0
-    BULLET_STEPS = 100
+    BULLET_STEPS = 50
 
-    def __init__(self, render=False, robot_model=R2D2, max_steps=200, num_foods=3, food_size=1.0, food_radius_scale=1.0, food_angle_scale=1.0):
+    def __init__(self, render=False, robot_model=R2D2, max_steps=500, num_foods=3, food_size=1.0, food_radius_scale=1.0, food_angle_scale=1.0):
         ### gym variables
         self.observation_space = robot_model.getObservationSpace() # classmethod
         self.action_space = robot_model.getActionSpace() # classmethod
