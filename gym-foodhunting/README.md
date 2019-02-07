@@ -7,7 +7,7 @@ Gym environments and agents for food hunting in the 3D world.
 
 I've tested on Mac OS X 10.13.6 (Python 3.6.5) and Ubuntu 16.04.
 
-Some packages need to install prerequisites. See these pages for more details of installation.
+Some packages need to install prerequisites. See these pages for more details.
 
 - https://www.scipy.org/install.html
 - https://github.com/openai/gym#installation
@@ -31,10 +31,14 @@ pip install pybullet
 
 pip install tensorflow # or tensorflow-gpu
 
-# You may need to install prerequisites. See https://github.com/hill-a/stable-baselines#installation for more details.
+# You may need to install prerequisites.
+# See https://github.com/hill-a/stable-baselines#installation for more details.
 pip install stable-baselines
 
 git clone https://github.com/susumuota/hsr_description.git
+# If you want to try original URDF file by TRI, clone it from their original repository instead.
+# git clone https://github.com/ToyotaResearchInstitute/hsr_description.git
+
 git clone https://github.com/ToyotaResearchInstitute/hsr_meshes.git
 
 cp -p hsr_description/robots/hsrb4s.urdf venv/lib/python3.6/site-packages/pybullet_data
