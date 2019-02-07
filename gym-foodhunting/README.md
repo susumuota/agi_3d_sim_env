@@ -7,7 +7,7 @@ Gym environments and agents for food hunting in the 3D world.
 
 I've tested on Mac OS X 10.13.6 (Python 3.6.5) and Ubuntu 16.04.
 
-See also these pages for more details of installation.
+Some packages need to install prerequisites. See these pages for more details of installation.
 
 - https://www.scipy.org/install.html
 - https://github.com/openai/gym#installation
@@ -23,9 +23,15 @@ python3 -m venv venv
 source venv/bin/activate
 
 pip install numpy
-pip install gym==0.10.11 # gym 0.11.0 won't work with stable-baseline 2.4.0
+
+# gym 0.11.0 won't work with stable-baseline 2.4.0.
+pip install gym==0.10.11
+
 pip install pybullet
+
 pip install tensorflow # or tensorflow-gpu
+
+# You may need to install prerequisites. See https://github.com/hill-a/stable-baselines#installation for more details.
 pip install stable-baselines
 
 git clone https://github.com/susumuota/hsr_description.git
