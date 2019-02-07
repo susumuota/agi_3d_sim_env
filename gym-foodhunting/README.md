@@ -35,9 +35,9 @@ pip install tensorflow # or tensorflow-gpu
 # See https://github.com/hill-a/stable-baselines#installation for more details.
 pip install stable-baselines
 
-git clone https://github.com/susumuota/hsr_description.git
-# If you want to try original URDF file by TRI, clone it from their original repository instead.
+# If you want to use original URDF file by TRI, clone it from their original repository instead.
 # git clone https://github.com/ToyotaResearchInstitute/hsr_description.git
+git clone https://github.com/susumuota/hsr_description.git
 
 git clone https://github.com/ToyotaResearchInstitute/hsr_meshes.git
 
