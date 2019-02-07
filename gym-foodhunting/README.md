@@ -29,6 +29,8 @@ pip install gym==0.10.11
 
 pip install pybullet
 
+# You may need to install prerequisites.
+# See https://www.tensorflow.org/install/pip for more details.
 pip install tensorflow # or tensorflow-gpu
 
 # You may need to install prerequisites.
