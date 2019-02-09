@@ -29,7 +29,7 @@ class Robot:
     # projectionMatrix settings
     CAMERA_PIXEL_WIDTH = 64 # 64 is minimum for stable-baselines
     CAMERA_PIXEL_HEIGHT = 64 # 64 is minimum for stable-baselines
-    CAMERA_FOV = 110.0
+    CAMERA_FOV = 90.0
     CAMERA_NEAR_PLANE = 0.01
     CAMERA_FAR_PLANE = 100.0
 
@@ -80,6 +80,8 @@ class Robot:
         return value
 
     def setJointVelocity(self, jointIndex, value, scale=1.0):
+        """Set joint velocity.
+        """
         # value should be from -1.0 to 1.0
         value = self.scaleJointVelocity(jointIndex, value)
         value *= scale
@@ -109,6 +111,8 @@ class Robot:
         return value, maxVelocity
 
     def setJointPosition(self, jointIndex, value):
+        """Set joint position.
+        """
         # value should be from -1.0 to 1.0
         value, maxVelocity = self.scaleJointPosition(jointIndex, value)
         p.setJointMotorControl2(bodyIndex=self.robotId,
@@ -118,6 +122,8 @@ class Robot:
                                 targetPosition=value)
 
     def invScaleJointPosition(self, jointIndex, value):
+        """Return inverse joint position.
+        """
         info = p.getJointInfo(self.robotId, jointIndex)
         lowerLimit = info[8]
         upperLimit = info[9]
@@ -132,10 +138,14 @@ class Robot:
         return value
 
     def getJointPosition(self, jointIndex):
+        """Return joint position.
+        """
         jointPosition, jointVelocity, jointReactionForces, appliedJointMotorTorque = p.getJointState(self.robotId, jointIndex)
         return self.invScaleJointPosition(jointIndex, jointPosition)
 
     def scaleJointForce(self, jointIndex, value):
+        """Scale joint force from [-1.0, 1.0] to [-maxForce, maxForce].
+        """
         # value should be from -1.0 to 1.0
         info = p.getJointInfo(self.robotId, jointIndex)
         maxForce = abs(info[10])
@@ -145,6 +155,8 @@ class Robot:
         return value
 
     def setJointForce(self, jointIndex, value):
+        """Set joint force.
+        """
         # value should be from -1.0 to 1.0
         value = self.scaleJointForce(jointIndex, value)
         p.setJointMotorControl2(bodyIndex=self.robotId,
@@ -153,13 +165,19 @@ class Robot:
                                 force=value)
 
     def getPositionAndOrientation(self):
+        """Return body's position and orientation.
+        """
         return p.getBasePositionAndOrientation(self.robotId)
 
     def isContact(self, bodyId):
+        """Return True if robot contacted with other objects.
+        """
         cps = p.getContactPoints(bodyA=self.robotId, bodyB=bodyId)
         return len(cps) > 0
 
     def getCameraImage(self):
+        """Return camera image from CAMERA_JOINT_INDEX.
+        """
         # compute eye and target position for viewMatrix
         pos, orn, _, _, _, _ = p.getLinkState(self.robotId, self.CAMERA_JOINT_INDEX)
         cameraPos = np.array(pos)
@@ -167,13 +185,15 @@ class Robot:
         eyePos = cameraPos + self.CAMERA_EYE_SCALE * cameraMat[self.CAMERA_EYE_INDEX]
         targetPos = cameraPos + self.CAMERA_TARGET_SCALE * cameraMat[self.CAMERA_EYE_INDEX]
         up = self.CAMERA_UP_SCALE * cameraMat[self.CAMERA_UP_INDEX]
-        #p.addUserDebugLine(eyePos, targetPos, lineColorRGB=[1, 0, 0], lifeTime=0.1) # red line for camera vector
-        #p.addUserDebugLine(eyePos, eyePos + up * 0.5, lineColorRGB=[0, 0, 1], lifeTime=0.1) # blue line for up vector
+        # p.addUserDebugLine(eyePos, targetPos, lineColorRGB=[1, 0, 0], lifeTime=0.1) # red line for camera vector
+        # p.addUserDebugLine(eyePos, eyePos + up * 0.5, lineColorRGB=[0, 0, 1], lifeTime=0.1) # blue line for up vector
         viewMatrix = p.computeViewMatrix(eyePos, targetPos, up)
         image = p.getCameraImage(self.CAMERA_PIXEL_WIDTH, self.CAMERA_PIXEL_HEIGHT, viewMatrix, self.projectionMatrix, shadow=1, lightDirection=[1, 1, 1], renderer=p.ER_BULLET_HARDWARE_OPENGL)
         return image
 
     def getObservation(self):
+        """Return RGB and depth images from CAMERA_JOINT_INDEX.
+        """
         width, height, rgbPixels, depthPixels, segmentationMaskBuffer = self.getCameraImage()
         rgba = np.array(rgbPixels, dtype=np.float32).reshape((height, width, 4))
         depth = np.array(depthPixels, dtype=np.float32).reshape((height, width, 1))
@@ -185,6 +205,8 @@ class Robot:
         return obs
 
     def printJointInfo(self, index):
+        """Print joint information.
+        """
         jointIndex, jointName, jointType, qIndex, uIndex, flags, jointDamping, jointFriction, jointLowerLimit, jointUpperLimit, jointMaxForce, jointMaxVelocity, linkName, jointAxis, parentFramePos, parentFrameOrn, parentIndex = p.getJointInfo(self.robotId, index)
         line = [ jointName.decode('ascii'), '\n\tjointIndex\t', jointIndex, '\n\tjointName\t', jointName, '\n\tjointType\t', jointType, '\t', self.JOINT_TYPE_NAMES[jointType], '\n\tqIndex\t', qIndex, '\n\tuIndex\t', uIndex, '\n\tflags\t', flags, '\n\tjointDamping\t', jointDamping, '\n\tjointFriction\t', jointFriction, '\n\tjointLowerLimit\t', jointLowerLimit, '\n\tjointUpperLimit\t', jointUpperLimit, '\n\tjointMaxForce\t', jointMaxForce, '\n\tjointMaxVelocity\t', jointMaxVelocity, '\n\tlinkName\t', linkName, '\n\tjointAxis\t', jointAxis, '\n\tparentFramePos\t', parentFramePos, '\n\tparentFrameOrn\t', parentFrameOrn, '\n\tparentIndex\t', parentIndex, '\n' ]
         print(''.join([ str(item) for item in line ]))
@@ -192,10 +214,14 @@ class Robot:
         #print('\t'.join([ str(item) for item in line ]))
 
     def printJointInfoArray(self, indexArray):
+        """Print joint informations.
+        """
         for index in indexArray:
             self.printJointInfo(index)
 
     def printAllJointInfo(self):
+        """Print all joint informations.
+        """
         self.printJointInfoArray(range(p.getNumJoints(self.robotId)))
 
 
@@ -211,17 +237,23 @@ class HSR(Robot):
     CAMERA_UP_SCALE = -1.0
 
     def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 0.05], orientation=[0.0, 0.0, 0.0, 1.0]):
+        """Make a HSR robot model.
+        """
         super(HSR, self).__init__(urdfPath, position, orientation)
 
     # override methods
     @classmethod
     def getActionSpace(cls):
+        """Return action_space for gym Env class.
+        """
         n = 11
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
     def setAction(self, action):
+        """Set action.
+        """
         self.setWheelVelocity(action[0], action[1])
         self.setBaseRollPosition(action[2])
         self.setTorsoLiftPosition(action[3])
@@ -232,29 +264,43 @@ class HSR(Robot):
 
     # HSR specific methods
     def setWheelVelocity(self, left, right):
+        """Set wheel's velocity.
+        """
         self.setJointVelocity(2, right, 0.25)
         self.setJointVelocity(3, left, 0.25)
 
     def setBaseRollPosition(self, roll):
+        """Set base roll position.
+        """
         self.setJointPosition(1, roll)
 
     def setTorsoLiftPosition(self, lift):
+        """Set base roll position.
+        """
         self.setJointPosition(12, lift)
 
     def setHeadPosition(self, pan, tilt):
+        """Set head position.
+        """
         self.setJointPosition(13, pan)
         self.setJointPosition(14, tilt)
 
     def setArmPosition(self, lift, flex, roll):
+        """Set arm position.
+        """
         self.setJointPosition(23, lift)
         self.setJointPosition(24, flex)
         self.setJointPosition(25, roll)
 
     def setWristPosition(self, flex, roll):
+        """Set wrist position.
+        """
         self.setJointPosition(26, flex)
         self.setJointPosition(27, roll)
 
     # def setHandPosition(self, motor, leftProximal, leftSpringProximal, leftMimicDistal, leftDistal, rightProximal, rightSpringProximal, rightMimicDistal, rightDistal): # TODO
+    #     """Set hand position.
+    #     """
     #     self.setJointPosition(30, motor)
     #     self.setJointPosition(31, leftProximal)
     #     self.setJointPosition(32, leftSpringProximal)
@@ -268,18 +314,26 @@ class HSR(Robot):
 class HSRSimple(HSR):
     @classmethod
     def getActionSpace(cls):
-        n = 6
+        """Return action_space for gym Env class.
+        """
+        n = 2
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
     def setAction(self, action):
+        """Set action.
+        """
         self.setWheelVelocity(action[0], action[1])
-        self.setArmPosition(action[2], action[3], 0.0)
-        self.setWristPosition(action[4], 0.0)
-        self.setHeadPosition(0.0, action[5])
+        self.setBaseRollPosition(0.0)
+        self.setTorsoLiftPosition(-1.0)
+        self.setHeadPosition(0.0, -0.5)
+        self.setArmPosition(0.5, -1.0, 0.0)
+        self.setWristPosition(0.5, 0.0)
 
     def isContact(self, bodyId):
+        """Return True if HSR's wrist contacted with other objects.
+        """
         cps = p.getContactPoints(bodyA=self.robotId, bodyB=bodyId, linkIndexA=27) # only for wrist_roll_link
         return len(cps) > 0
 
@@ -289,10 +343,19 @@ class HSRDiscrete(HSR):
 
     @classmethod
     def getActionSpace(cls):
+        """Return action_space for gym Env class.
+        """
         return gym.spaces.Discrete(len(cls.ACTIONS))
 
     def setAction(self, action):
+        """Set action.
+        """
         self.setWheelVelocity(*self.ACTIONS[action])
+        self.setBaseRollPosition(0.0)
+        self.setTorsoLiftPosition(-1.0)
+        self.setHeadPosition(0.0, -0.5)
+        self.setArmPosition(0.5, -1.0, 0.0)
+        self.setWristPosition(0.5, 0.0)
 
 class R2D2(Robot):
     URDF_PATH = 'r2d2.urdf'
@@ -306,17 +369,23 @@ class R2D2(Robot):
     CAMERA_UP_SCALE = 1.0
 
     def __init__(self, urdfPath=URDF_PATH, position=[0.0, 0.0, 0.5], orientation=[0.0, 0.0, 0.0, 1.0]):
+        """Make a R2D2 robot model.
+        """
         super(R2D2, self).__init__(urdfPath, position, orientation)
 
     # override methods
     @classmethod
     def getActionSpace(cls):
+        """Return action_space for gym Env class.
+        """
         n = 6
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
     def setAction(self, action):
+        """Set action.
+        """
         self.setWheelVelocity(action[0], action[1])
         self.setGripperPosition(action[2], action[3], action[4])
         self.setHeadPosition(action[5])
@@ -339,32 +408,46 @@ class R2D2(Robot):
 class R2D2Simple(R2D2):
     @classmethod
     def getActionSpace(cls):
+        """Return action_space for gym Env class.
+        """
         n = 2
         low = -1.0 * np.ones(n)
         high = 1.0 * np.ones(n)
         return gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
     def setAction(self, action):
+        """Set action.
+        """
         self.setWheelVelocity(action[0], action[1])
-        # self.setGripperPosition(1.0, action[2], action[2])
+        self.setGripperPosition(1.0, 1.0, 1.0)
+        self.setHeadPosition(0.0)
 
 class R2D2Discrete(R2D2):
     ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0] ]
 
     @classmethod
     def getActionSpace(cls):
+        """Return action_space for gym Env class.
+        """
         return gym.spaces.Discrete(len(cls.ACTIONS))
 
     def setAction(self, action):
+        """Set action.
+        """
         self.setWheelVelocity(*self.ACTIONS[action])
+        self.setGripperPosition(1.0, 1.0, 1.0)
+        self.setHeadPosition(0.0)
+
 
 class FoodHuntingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     GRAVITY = -10.0
-    BULLET_STEPS = 50
+    BULLET_STEPS = 120 # p.setTimeStep(1.0 / 240.0), so 1 gym step == 0.5 sec.
 
     def __init__(self, render=False, robot_model=R2D2, max_steps=500, num_foods=3, food_size=1.0, food_radius_scale=1.0, food_angle_scale=1.0):
+        """Initialize environment.
+        """
         ### gym variables
         self.observation_space = robot_model.getObservationSpace() # classmethod
         self.action_space = robot_model.getActionSpace() # classmethod
@@ -388,9 +471,13 @@ class FoodHuntingEnv(gym.Env):
         self.episode_rewards = 0.0
 
     def close(self):
+        """Close environment.
+        """
         p.disconnect(self.physicsClient)
 
     def reset(self):
+        """Reset environment.
+        """
         self.steps = 0
         self.episode_rewards = 0
         p.resetSimulation()
@@ -408,6 +495,8 @@ class FoodHuntingEnv(gym.Env):
         return obs
 
     def step(self, action):
+        """Apply action to environment, then return observation and reward.
+        """
         self.steps += 1
         self.robot.setAction(action)
         reward = -1.0 * float(self.num_foods) / float(self.max_steps) # so agent needs to eat foods quickly
@@ -425,13 +514,19 @@ class FoodHuntingEnv(gym.Env):
         return obs, reward, done, info
 
     def render(self, mode='human', close=False):
+        """This is a dummy function. This environment cannot control rendering timing.
+        """
         pass
 
     def seed(self, seed=None):
+        """Set random seed.
+        """
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
     def _getReward(self):
+        """Detect contact points and return reward.
+        """
         reward = 0
         contacted_food_ids = [ food_id for food_id in self.food_ids if self.robot.isContact(food_id) ]
         for food_id in contacted_food_ids:
@@ -441,6 +536,8 @@ class FoodHuntingEnv(gym.Env):
         return reward
 
     def _generateFoodPositions(self, num=1, retry=100, radius_scale=1.0, radius_offset=1.0, angle_scale=0.25, angle_offset=0.5*np.pi, z=1.5, near_distance=1.0):
+        """Generate food positions randomly.
+        """
         def genPos():
             r = radius_scale * self.np_random.rand() + radius_offset
             #ang = 2.0 * np.pi * self.np_random.rand()
