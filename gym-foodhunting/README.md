@@ -181,11 +181,11 @@ python agents/ppo_agent.py --help
 
 # Learn
 # This may take a few hours.
-time python agents/ppo_agent.py --env_name="FoodHuntingHSR-v1" --total_timesteps=500000 --n_cpu=8 --reward_threshold=3.0
+time python agents/ppo_agent.py --env_name="FoodHuntingHSRDiscrete-v1" --total_timesteps=500000 --n_cpu=8 --reward_threshold=3.0
 
 # Play with GUI
 # This will open PyBullet window.
-time python agents/ppo_agent.py --env_name="FoodHuntingHSRGUI-v1" --load_file="FoodHuntingHSR-v1_best.pkl" --total_timesteps=500000 --n_cpu=8 --play
+time python agents/ppo_agent.py --env_name="FoodHuntingHSRDiscrete-v1" --load_file="FoodHuntingHSR-v1_best.pkl" --total_timesteps=500000 --n_cpu=8 --play
 ```
 
 
