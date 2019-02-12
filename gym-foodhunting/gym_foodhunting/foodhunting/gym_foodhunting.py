@@ -262,6 +262,12 @@ class HSR(Robot):
         self.setWristPosition(action[9], action[10])
         # self.setHandPosition(action[11], action[12], action[13], action[14], action[15], action[16], action[17], action[18], action[19]) # TODO
 
+    def isContact(self, bodyId):
+        """Return True if HSR's wrist contacted with other objects.
+        """
+        cps = p.getContactPoints(bodyA=self.robotId, bodyB=bodyId, linkIndexA=27) # only for wrist_roll_link
+        return len(cps) > 0
+
     # HSR specific methods
     def setWheelVelocity(self, left, right):
         """Set wheel's velocity.
@@ -330,13 +336,6 @@ class HSRSimple(HSR):
         self.setHeadPosition(0.0, -0.5)
         self.setArmPosition(0.5, -1.0, 0.0)
         self.setWristPosition(0.5, 0.0)
-
-    def isContact(self, bodyId):
-        """Return True if HSR's wrist contacted with other objects.
-        """
-        cps = p.getContactPoints(bodyA=self.robotId, bodyB=bodyId, linkIndexA=27) # only for wrist_roll_link
-        return len(cps) > 0
-
 
 class HSRDiscrete(HSR):
     ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0] ]
