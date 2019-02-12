@@ -206,7 +206,8 @@ FoodHuntingHSR-v1
 FoodHuntingHSRGUI-v1
 FoodHuntingHSRDiscrete-v0
 FoodHuntingHSRDiscreteGUI-v0
-FoodHuntingHSRFullGUI-v0
+FoodHuntingHSRDiscrete-v1
+FoodHuntingHSRDiscreteGUI-v1
 ```
 
 # Author
