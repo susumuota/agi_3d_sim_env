@@ -21,7 +21,7 @@ def make_env(env_name, rank, seed=0):
     set_global_seeds(seed)
     return _init
 
-def learn(env_name, load_file, save_file, total_timesteps, n_cpu, reward_threshold):
+def learn(env_name, load_file, save_file, tensorboard_log, total_timesteps, n_cpu, reward_threshold):
     best_mean_reward = -np.inf
     best_mean_step = np.inf
     counter = 0
@@ -56,9 +56,9 @@ def learn(env_name, load_file, save_file, total_timesteps, n_cpu, reward_thresho
     # see https://github.com/rtomayko/shotgun/issues/69#issuecomment-338401331
     env = SubprocVecEnv([make_env(env_name, i) for i in range(n_cpu)])
     if load_file is not None:
-        model = PPO2.load(load_file, env, verbose=1)
+        model = PPO2.load(load_file, env, verbose=1, tensorboard_log=tensorboard_log)
     else:
-        model = PPO2(policy, env, verbose=1)
+        model = PPO2(policy, env, verbose=1, tensorboard_log=tensorboard_log)
     model.learn(total_timesteps=total_timesteps, log_interval=5, callback=callback)
     print('saving model:', save_file)
     model.save(save_file)
@@ -100,6 +100,7 @@ if __name__ == '__main__':
     parser.add_argument('--env_name', type=str, default='FoodHunting-v0', help='environment name.')
     parser.add_argument('--load_file', type=str, default=None, help='filename to load model.')
     parser.add_argument('--save_file', type=str, default=None, help='filename to save model.')
+    parser.add_argument('--tensorboard_log', type=str, default=None, help='tensorboard log file.')
     parser.add_argument('--total_timesteps', type=int, default=500000, help='total timesteps.')
     parser.add_argument('--n_cpu', type=int, default=8, help='number of CPU cores.')
     parser.add_argument('--reward_threshold', type=float, default=3.0, help='reward threshold to finish learning.')
@@ -108,4 +109,4 @@ if __name__ == '__main__':
     if args.play:
         play(args.env_name, args.load_file, args.total_timesteps, args.n_cpu)
     else:
-        learn(args.env_name, args.load_file, args.save_file, args.total_timesteps, args.n_cpu, args.reward_threshold)
+        learn(args.env_name, args.load_file, args.save_file, args.tensorboard_log, args.total_timesteps, args.n_cpu, args.reward_threshold)
