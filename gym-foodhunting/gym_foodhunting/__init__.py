@@ -5,104 +5,136 @@ from gym_foodhunting.foodhunting.gym_foodhunting import R2D2Simple, R2D2Discrete
 register(
     id='FoodHunting-v0',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
+    max_episode_steps=50,
     reward_threshold=3.0,
-    kwargs={'render': False, 'robot_model': R2D2Simple, 'max_steps': 200, 'num_foods': 3, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    kwargs={'render': False, 'robot_model': R2D2Simple, 'max_steps': 50, 'num_foods': 3, 'num_fakes': 0, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 1.0, 'blur_kernel': None}
 )
 
 register(
     id='FoodHuntingGUI-v0',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
+    max_episode_steps=50,
     reward_threshold=3.0,
-    kwargs={'render': True, 'robot_model': R2D2Simple, 'max_steps': 200, 'num_foods': 3, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    kwargs={'render': True, 'robot_model': R2D2Simple, 'max_steps': 50, 'num_foods': 3, 'num_fakes': 0, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 1.0, 'blur_kernel': None}
 )
 
 register(
     id='FoodHuntingDiscrete-v0',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
+    max_episode_steps=50,
     reward_threshold=3.0,
-    kwargs={'render': False, 'robot_model': R2D2Discrete, 'max_steps': 200, 'num_foods': 3, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    kwargs={'render': False, 'robot_model': R2D2Discrete, 'max_steps': 50, 'num_foods': 3, 'num_fakes': 0, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 1.0, 'blur_kernel': None}
 )
 
 register(
     id='FoodHuntingDiscreteGUI-v0',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
+    max_episode_steps=50,
     reward_threshold=3.0,
-    kwargs={'render': True, 'robot_model': R2D2Discrete, 'max_steps': 200, 'num_foods': 3, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    kwargs={'render': True, 'robot_model': R2D2Discrete, 'max_steps': 50, 'num_foods': 3, 'num_fakes': 0, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 1.0, 'blur_kernel': None}
 )
 
 # FoodHunting HSR
 register(
     id='FoodHuntingHSR-v0',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
+    max_episode_steps=50,
     reward_threshold=3.0,
-    kwargs={'render': False, 'robot_model': HSRSimple, 'max_steps': 200, 'num_foods': 3, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    kwargs={'render': False, 'robot_model': HSRSimple, 'max_steps': 50, 'num_foods': 3, 'num_fakes': 0, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 1.0, 'blur_kernel': None}
 )
 
 register(
     id='FoodHuntingHSRGUI-v0',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
+    max_episode_steps=50,
     reward_threshold=3.0,
-    kwargs={'render': True, 'robot_model': HSRSimple, 'max_steps': 200, 'num_foods': 3, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    kwargs={'render': True, 'robot_model': HSRSimple, 'max_steps': 50, 'num_foods': 3, 'num_fakes': 0, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 1.0, 'blur_kernel': None}
 )
 
 register(
     id='FoodHuntingHSR-v1',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
-    reward_threshold=10.0,
-    kwargs={'render': False, 'robot_model': HSRSimple, 'max_steps': 200, 'num_foods': 10, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    max_episode_steps=50,
+    reward_threshold=1.0,
+    kwargs={'render': False, 'robot_model': HSRSimple, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 0.25, 'blur_kernel': None}
 )
 
 register(
     id='FoodHuntingHSRGUI-v1',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
-    reward_threshold=10.0,
-    kwargs={'render': True, 'robot_model': HSRSimple, 'max_steps': 200, 'num_foods': 10, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    max_episode_steps=50,
+    reward_threshold=1.0,
+    kwargs={'render': True, 'robot_model': HSRSimple, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 0, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 0.25, 'blur_kernel': None}
+)
+
+register(
+    id='FoodHuntingHSR-v2',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=50,
+    reward_threshold=1.0,
+    kwargs={'render': False, 'robot_model': HSRSimple, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'blur_kernel': (5, 5)}
+)
+
+register(
+    id='FoodHuntingHSRGUI-v2',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=50,
+    reward_threshold=1.0,
+    kwargs={'render': True, 'robot_model': HSRSimple, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'blur_kernel': (5, 5)}
 )
 
 register(
     id='FoodHuntingHSRDiscrete-v0',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
+    max_episode_steps=50,
     reward_threshold=3.0,
-    kwargs={'render': False, 'robot_model': HSRDiscrete, 'max_steps': 200, 'num_foods': 3, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    kwargs={'render': False, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 3, 'num_fakes': 0, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 1.0, 'blur_kernel': None}
 )
 
 register(
     id='FoodHuntingHSRDiscreteGUI-v0',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
+    max_episode_steps=50,
     reward_threshold=3.0,
-    kwargs={'render': True, 'robot_model': HSRDiscrete, 'max_steps': 200, 'num_foods': 3, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    kwargs={'render': True, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 3, 'num_fakes': 0, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 1.0, 'blur_kernel': None}
 )
 
 register(
     id='FoodHuntingHSRDiscrete-v1',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
-    reward_threshold=10.0,
-    kwargs={'render': False, 'robot_model': HSRDiscrete, 'max_steps': 200, 'num_foods': 10, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    max_episode_steps=50,
+    reward_threshold=1.0,
+    kwargs={'render': False, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 0.25, 'blur_kernel': None}
 )
 
 register(
     id='FoodHuntingHSRDiscreteGUI-v1',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
-    reward_threshold=10.0,
-    kwargs={'render': True, 'robot_model': HSRDiscrete, 'max_steps': 200, 'num_foods': 10, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    max_episode_steps=50,
+    reward_threshold=1.0,
+    kwargs={'render': True, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 1.0, 'object_radius_offset': 1.0, 'object_angle_scale': 0.25, 'blur_kernel': None}
+)
+
+register(
+    id='FoodHuntingHSRDiscrete-v2',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=50,
+    reward_threshold=1.0,
+    kwargs={'render': False, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'blur_kernel': (5, 5)}
+)
+
+register(
+    id='FoodHuntingHSRDiscreteGUI-v2',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=50,
+    reward_threshold=1.0,
+    kwargs={'render': True, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'blur_kernel': (5, 5)}
 )
 
 register(
     id='FoodHuntingHSRTestGUI-v0',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
-    max_episode_steps=200,
+    max_episode_steps=50,
     reward_threshold=1.0,
-    kwargs={'render': True, 'robot_model': HSR, 'max_steps': 200, 'num_foods': 1, 'food_size': 0.5, 'food_radius_scale': 1.0, 'food_angle_scale': 1.0}
+    kwargs={'render': True, 'robot_model': HSR, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'blur_kernel': None}
 )
