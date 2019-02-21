@@ -538,7 +538,6 @@ class FoodHuntingEnv(gym.Env):
         contacted_object_ids = [ object_id for object_id in self.object_ids if self.robot.isContact(object_id) ]
         for object_id in contacted_object_ids:
             reward += 1 if self._isFood(object_id) else -1
-            print(reward)
             p.removeBody(object_id)
             self.object_ids.remove(object_id)
         return reward
