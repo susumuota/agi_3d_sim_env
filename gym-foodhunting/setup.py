@@ -1,6 +1,6 @@
 from setuptools import setup
 
 setup(name='gym_foodhunting',
-      version='0.0.19',
+      version='0.0.20',
       install_requires=['numpy', 'gym', 'pybullet'] # and stable-baselines for running RL
 )
