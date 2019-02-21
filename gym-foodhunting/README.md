@@ -46,6 +46,8 @@ git clone https://github.com/ToyotaResearchInstitute/hsr_meshes.git
 cp -p hsr_description/robots/hsrb4s.urdf venv/lib/python3.6/site-packages/pybullet_data
 cp -rp hsr_meshes venv/lib/python3.6/site-packages/pybullet_data
 cp -p gym-foodhunting/urdf/r2d2.urdf venv/lib/python3.6/site-packages/pybullet_data
+cp -p gym-foodhunting/urdf/food_sphere.urdf venv/lib/python3.6/site-packages/pybullet_data
+cp -p gym-foodhunting/urdf/food_cube.urdf venv/lib/python3.6/site-packages/pybullet_data
 
 cd gym-foodhunting
 pip install -e .
@@ -208,10 +210,14 @@ FoodHuntingHSR-v0
 FoodHuntingHSRGUI-v0
 FoodHuntingHSR-v1
 FoodHuntingHSRGUI-v1
+FoodHuntingHSR-v2
+FoodHuntingHSRGUI-v2
 FoodHuntingHSRDiscrete-v0
 FoodHuntingHSRDiscreteGUI-v0
 FoodHuntingHSRDiscrete-v1
 FoodHuntingHSRDiscreteGUI-v1
+FoodHuntingHSRDiscrete-v2
+FoodHuntingHSRDiscreteGUI-v2
 ```
 
 # Author
