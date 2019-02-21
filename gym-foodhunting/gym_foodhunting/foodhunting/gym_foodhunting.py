@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import numpy as np
+import cv2
 import gym
 import gym.spaces
 from gym.utils import seeding
@@ -444,7 +445,7 @@ class FoodHuntingEnv(gym.Env):
     GRAVITY = -10.0
     BULLET_STEPS = 120 # p.setTimeStep(1.0 / 240.0), so 1 gym step == 0.5 sec.
 
-    def __init__(self, render=False, robot_model=R2D2, max_steps=500, num_foods=3, food_size=1.0, food_radius_scale=1.0, food_angle_scale=1.0):
+    def __init__(self, render=False, robot_model=R2D2, max_steps=500, num_foods=3, num_fakes=0, object_size=1.0, object_radius_scale=1.0, object_radius_offset=1.0, object_angle_scale=1.0, blur_kernel=None):
         """Initialize environment.
         """
         ### gym variables
@@ -459,12 +460,15 @@ class FoodHuntingEnv(gym.Env):
         self.robot_model = robot_model
         self.max_steps = max_steps
         self.num_foods = num_foods
-        self.food_size = food_size
-        self.food_angle_scale = food_angle_scale
-        self.food_radius_scale = food_radius_scale
+        self.num_fakes = num_fakes
+        self.object_size = object_size
+        self.object_radius_scale = object_radius_scale
+        self.object_radius_offset = object_radius_offset
+        self.object_angle_scale = object_angle_scale
+        self.blur_kernel = blur_kernel
         self.plane_id = None
         self.robot = None
-        self.food_ids = []
+        self.object_ids = []
         ### episode variables
         self.steps = 0
         self.episode_rewards = 0.0
@@ -484,13 +488,17 @@ class FoodHuntingEnv(gym.Env):
         p.setGravity(0, 0, self.GRAVITY)
         self.plane_id = p.loadURDF('plane.urdf')
         self.robot = self.robot_model()
-        self.food_ids = []
-        for food_pos in self._generateFoodPositions(num=self.num_foods, angle_scale=self.food_angle_scale, radius_scale=self.food_radius_scale):
-            food_id = p.loadURDF('sphere2red.urdf', food_pos, globalScaling=self.food_size)
-            self.food_ids.append(food_id)
+        self.object_ids = []
+        for i, (pos, orn) in enumerate(self._generateObjectPositions(num=(self.num_foods+self.num_fakes), radius_scale=self.object_radius_scale, radius_offset=self.object_radius_offset, angle_scale=self.object_angle_scale)):
+            if i < self.num_foods:
+                urdfPath = 'food_sphere.urdf'
+            else:
+                urdfPath = 'food_cube.urdf'
+            object_id = p.loadURDF(urdfPath, pos, orn, globalScaling=self.object_size)
+            self.object_ids.append(object_id)
         for i in range(self.BULLET_STEPS):
             p.stepSimulation()
-        obs = self.robot.getObservation()
+        obs = self._getObservation()
         return obs
 
     def step(self, action):
@@ -503,8 +511,8 @@ class FoodHuntingEnv(gym.Env):
             p.stepSimulation()
             reward += self._getReward()
         self.episode_rewards += reward
-        obs = self.robot.getObservation()
-        done = self.steps >= self.max_steps or len(self.food_ids) <= 0
+        obs = self._getObservation()
+        done = self._isDone()
         pos, orn = self.robot.getPositionAndOrientation()
         info = { 'steps': self.steps, 'pos': pos, 'orn': orn }
         if done:
@@ -527,25 +535,44 @@ class FoodHuntingEnv(gym.Env):
         """Detect contact points and return reward.
         """
         reward = 0
-        contacted_food_ids = [ food_id for food_id in self.food_ids if self.robot.isContact(food_id) ]
-        for food_id in contacted_food_ids:
-            p.removeBody(food_id)
-            self.food_ids.remove(food_id)
-            reward += 1
+        contacted_object_ids = [ object_id for object_id in self.object_ids if self.robot.isContact(object_id) ]
+        for object_id in contacted_object_ids:
+            reward += 1 if self._isFood(object_id) else -1
+            print(reward)
+            p.removeBody(object_id)
+            self.object_ids.remove(object_id)
         return reward
 
-    def _generateFoodPositions(self, num=1, retry=100, radius_scale=1.0, radius_offset=1.0, angle_scale=0.25, angle_offset=0.5*np.pi, z=1.5, near_distance=1.0):
+    def _getObservation(self):
+        obs = self.robot.getObservation()
+        if self.blur_kernel is not None:
+            #cv2.imshow('original rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
+            #cv2.imshow('original depth', obs[ :, :, 3 ])
+            # normalized box filter
+            obs[ :, :, : ] = cv2.blur(obs[ :, :, : ], self.blur_kernel)
+            #cv2.imshow('blur rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
+            #cv2.imshow('blur depth', obs[ :, :, 3 ])
+        return obs
+
+    def _isFood(self, object_id):
+        baseLink, urdfPath = p.getBodyInfo(object_id)
+        return urdfPath == b'food_sphere.urdf' # otherwise, fake
+
+    def _isDone(self):
+        available_object_ids = [ object_id for object_id in self.object_ids if self._isFood(object_id) ]
+        return self.steps >= self.max_steps or len(available_object_ids) <= 0
+
+    def _generateObjectPositions(self, num=1, retry=100, radius_scale=1.0, radius_offset=1.0, angle_scale=1.0, angle_offset=0.5*np.pi, z=1.5, near_distance=0.5):
         """Generate food positions randomly.
         """
         def genPos():
             r = radius_scale * self.np_random.rand() + radius_offset
-            #ang = 2.0 * np.pi * self.np_random.rand()
             a = -np.pi * angle_scale + angle_offset
             b =  np.pi * angle_scale + angle_offset
             ang = (b - a) * self.np_random.rand() + a
             return np.array([r * np.sin(ang), r * np.cos(ang), z])
         def isNear(pos, poss):
-            for p in poss:
+            for p, o in poss:
                 if np.linalg.norm(p - pos) < near_distance:
                     return True
             return False
@@ -558,5 +585,6 @@ class FoodHuntingEnv(gym.Env):
         poss = []
         for i in range(num):
             pos = genPosRetry(poss)
-            poss.append(pos)
+            orn = p.getQuaternionFromEuler([0.0, 0.0, 2.0*np.pi*self.np_random.rand()])
+            poss.append((pos, orn))
         return poss
