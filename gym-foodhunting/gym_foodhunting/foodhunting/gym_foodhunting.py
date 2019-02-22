@@ -339,7 +339,7 @@ class HSRSimple(HSR):
         self.setWristPosition(0.5, 0.0)
 
 class HSRDiscrete(HSR):
-    ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0] ]
+    ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0], [0.0, 0.0] ]
 
     @classmethod
     def getActionSpace(cls):
@@ -423,7 +423,7 @@ class R2D2Simple(R2D2):
         self.setHeadPosition(0.0)
 
 class R2D2Discrete(R2D2):
-    ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0] ]
+    ACTIONS = [ [ 1.0, 1.0], [-1.0, 1.0], [1.0, -1.0], [0.0, 0.0] ]
 
     @classmethod
     def getActionSpace(cls):
