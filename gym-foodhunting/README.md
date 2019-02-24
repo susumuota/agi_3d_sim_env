@@ -24,8 +24,7 @@ source venv/bin/activate
 
 pip install numpy
 
-# gym 0.11.0 won't work with stable-baseline 2.4.0.
-pip install gym==0.10.11
+pip install gym
 
 pip install pybullet
 
