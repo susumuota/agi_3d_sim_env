@@ -29,8 +29,8 @@ def learn(env_name, seed, load_file, save_file, tensorboard_log, total_timesteps
     start_time = time.time()
     def callback(_locals, _globals):
         nonlocal best_mean_reward, best_mean_step
-        t = int((time.time() - start_time) / 60.0)
-        print('minutes:', t)
+        t = (time.time() - start_time) / 3600.0
+        print(f'hours: {t:.2f}')
         ep_info_buf = _locals['ep_info_buf']
         if len(ep_info_buf) < ep_info_buf.maxlen:
             return True
