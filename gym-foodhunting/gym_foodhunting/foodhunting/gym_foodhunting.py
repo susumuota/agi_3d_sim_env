@@ -445,7 +445,7 @@ class FoodHuntingEnv(gym.Env):
     GRAVITY = -10.0
     BULLET_STEPS = 120 # p.setTimeStep(1.0 / 240.0), so 1 gym step == 0.5 sec.
 
-    def __init__(self, render=False, robot_model=R2D2, max_steps=500, num_foods=3, num_fakes=0, object_size=1.0, object_radius_scale=1.0, object_radius_offset=1.0, object_angle_scale=1.0, blur_kernel=None):
+    def __init__(self, render=False, robot_model=R2D2, max_steps=500, num_foods=3, num_fakes=0, object_size=1.0, object_radius_scale=1.0, object_radius_offset=1.0, object_angle_scale=1.0, blur_kernel=None, drop_frame=None):
         """Initialize environment.
         """
         ### gym variables
@@ -466,6 +466,7 @@ class FoodHuntingEnv(gym.Env):
         self.object_radius_offset = object_radius_offset
         self.object_angle_scale = object_angle_scale
         self.blur_kernel = blur_kernel
+        self.drop_frame = drop_frame
         self.plane_id = None
         self.robot = None
         self.object_ids = []
@@ -545,12 +546,21 @@ class FoodHuntingEnv(gym.Env):
     def _getObservation(self):
         obs = self.robot.getObservation()
         if self.blur_kernel is not None:
-            #cv2.imshow('original rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
-            #cv2.imshow('original depth', obs[ :, :, 3 ])
+            # cv2.imshow('original rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
+            # cv2.imshow('original depth', obs[ :, :, 3 ])
             # normalized box filter
-            obs[ :, :, : ] = cv2.blur(obs[ :, :, : ], self.blur_kernel)
-            #cv2.imshow('blur rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
-            #cv2.imshow('blur depth', obs[ :, :, 3 ])
+            # obs[ :, :, : ] = cv2.blur(obs[ :, :, : ], self.blur_kernel)
+            obs = cv2.blur(obs, self.blur_kernel)
+            # cv2.imshow('blur rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
+            # cv2.imshow('blur depth', obs[ :, :, 3 ])
+        if self.drop_frame is not None:
+            # cv2.imshow('original rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
+            # cv2.imshow('original depth', obs[ :, :, 3 ])
+            # normalized box filter
+            if self.np_random.rand() < self.drop_frame:
+                obs = np.zeros_like(obs) # black
+            # cv2.imshow('drop rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
+            # cv2.imshow('drop depth', obs[ :, :, 3 ])
         return obs
 
     def _isFood(self, object_id):
