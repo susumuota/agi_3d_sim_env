@@ -21,7 +21,7 @@ def make_env(env_name, rank, seed):
     set_global_seeds(seed)
     return _init
 
-def learn(env_name, seed, load_file, save_file, tensorboard_log, total_timesteps, n_cpu, reward_threshold):
+def learn(env_name, seed, load_file, save_file, tensorboard_log, total_timesteps, n_cpu):
     best_mean_reward = -np.inf
     best_mean_step = np.inf
     save_file = env_name if save_file is None else save_file
@@ -44,7 +44,7 @@ def learn(env_name, seed, load_file, save_file, tensorboard_log, total_timesteps
         if mean_step < best_mean_step:
             best_mean_step = mean_step
             print('best_mean_step:', best_mean_step)
-        return mean_reward < reward_threshold # False should finish learning
+        return True # False should finish learning
     # policy = CnnPolicy
     policy = CnnLstmPolicy
     # policy = CnnLnLstmPolicy
@@ -98,12 +98,11 @@ if __name__ == '__main__':
     parser.add_argument('--save_file', type=str, default=None, help='filename to save model.')
     parser.add_argument('--tensorboard_log', type=str, default=None, help='tensorboard log file.')
     parser.add_argument('--total_timesteps', type=int, default=10000000, help='total timesteps.')
-    parser.add_argument('--n_cpu', type=int, default=8, help='number of CPU cores.')
+    parser.add_argument('--n_cpu', type=int, default=16, help='number of CPU cores.')
     parser.add_argument('--seed', type=int, default=0, help='seed for random number.')
-    parser.add_argument('--reward_threshold', type=float, default=3.0, help='reward threshold to finish learning.')
     args = parser.parse_args()
 
     if args.play:
         play(args.env_name, args.seed, args.load_file, args.total_timesteps, args.n_cpu)
     else:
-        learn(args.env_name, args.seed, args.load_file, args.save_file, args.tensorboard_log, args.total_timesteps, args.n_cpu, args.reward_threshold)
+        learn(args.env_name, args.seed, args.load_file, args.save_file, args.tensorboard_log, args.total_timesteps, args.n_cpu)
