@@ -64,6 +64,7 @@ def learn(env_name, seed, load_file, save_file, tensorboard_log, total_timesteps
 
 
 def play(env_name, seed, load_file, total_timesteps, n_cpu):
+    np.set_printoptions(precision=5)
     def padding_obss(obss, dummy_obss):
         dummy_obss[ 0, :, :, : ] = obss
         return dummy_obss
@@ -87,7 +88,8 @@ def play(env_name, seed, load_file, total_timesteps, n_cpu):
         if dones.any():
             rewards_buf.extend([ info['episode']['r'] for info in infos if 'episode' in info ])
             steps_buf.extend([ info['episode']['l'] for info in infos if 'episode' in info ])
-            print('mean:', np.mean(rewards_buf), np.mean(steps_buf))
+            line = np.array([np.mean(rewards_buf), np.std(rewards_buf), np.mean(steps_buf), np.std(steps_buf)])
+            print(len(rewards_buf), line)
     env.close()
 
 if __name__ == '__main__':
