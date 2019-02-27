@@ -546,21 +546,13 @@ class FoodHuntingEnv(gym.Env):
     def _getObservation(self):
         obs = self.robot.getObservation()
         if self.blur_kernel is not None:
-            # cv2.imshow('original rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
-            # cv2.imshow('original depth', obs[ :, :, 3 ])
             # normalized box filter
-            # obs[ :, :, : ] = cv2.blur(obs[ :, :, : ], self.blur_kernel)
             obs = cv2.blur(obs, self.blur_kernel)
-            # cv2.imshow('blur rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
-            # cv2.imshow('blur depth', obs[ :, :, 3 ])
         if self.drop_frame is not None:
-            # cv2.imshow('original rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
-            # cv2.imshow('original depth', obs[ :, :, 3 ])
-            # normalized box filter
             if self.np_random.rand() < self.drop_frame:
                 obs = np.zeros_like(obs) # black
-            # cv2.imshow('drop rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
-            # cv2.imshow('drop depth', obs[ :, :, 3 ])
+        # cv2.imshow('after rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
+        # cv2.imshow('after depth', obs[ :, :, 3 ])
         return obs
 
     def _isFood(self, object_id):
