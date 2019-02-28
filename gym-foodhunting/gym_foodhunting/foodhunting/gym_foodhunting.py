@@ -556,12 +556,14 @@ class FoodHuntingEnv(gym.Env):
         if self.rain_noise is not None:
             hw = [ (h, w) for h in range(self.robot.CAMERA_PIXEL_HEIGHT) for w in range(self.robot.CAMERA_PIXEL_WIDTH) ]
             self.np_random.shuffle(hw)
-            for (h, w) in hw:
-                if self.np_random.rand() < self.rain_noise:
+            len_hw = len(hw)
+            for i, (h, w) in enumerate(hw):
+                # if self.np_random.rand() < self.rain_noise:
+                if i  < self.rain_noise * len_hw:
                     obs[h, w] = np.ones_like(obs[h, w])
         if self.render:
             cv2.imshow('after rgb', cv2.cvtColor(obs[ :, :, :-1 ], cv2.COLOR_RGB2BGR))
-            cv2.imshow('after depth', obs[ :, :, 3 ])
+            # cv2.imshow('after depth', obs[ :, :, 3 ])
         return obs
 
     def _isFood(self, object_id):
