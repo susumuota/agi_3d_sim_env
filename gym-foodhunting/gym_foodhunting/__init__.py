@@ -144,6 +144,48 @@ register(
 )
 
 register(
+    id='FoodHuntingHSRDiscrete-v5',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=50,
+    kwargs={'render': False, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'rain_noise': 0.25}
+)
+
+register(
+    id='FoodHuntingHSRDiscreteGUI-v5',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=50,
+    kwargs={'render': True, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'rain_noise': 0.25}
+)
+
+register(
+    id='FoodHuntingHSRDiscrete-v6',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=50,
+    kwargs={'render': False, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'rain_noise': 0.5}
+)
+
+register(
+    id='FoodHuntingHSRDiscreteGUI-v6',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=50,
+    kwargs={'render': True, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'rain_noise': 0.5}
+)
+
+register(
+    id='FoodHuntingHSRDiscrete-v7',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=50,
+    kwargs={'render': False, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'rain_noise': 0.75}
+)
+
+register(
+    id='FoodHuntingHSRDiscreteGUI-v7',
+    entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
+    max_episode_steps=50,
+    kwargs={'render': True, 'robot_model': HSRDiscrete, 'max_steps': 50, 'num_foods': 1, 'num_fakes': 1, 'object_size': 0.5, 'object_radius_scale': 0.0, 'object_radius_offset': 1.5, 'object_angle_scale': 0.25, 'rain_noise': 0.75}
+)
+
+register(
     id='FoodHuntingHSRTestGUI-v0',
     entry_point='gym_foodhunting.foodhunting:FoodHuntingEnv',
     max_episode_steps=50,
